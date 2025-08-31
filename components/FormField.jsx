@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, Lock } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 
@@ -23,6 +23,7 @@ export function FormField({ field, value, onChange }) {
         <div>
           <Label htmlFor={field.id}>
             {field.label} {field.required && <span className="text-red-500">*</span>}
+            {field.readonly && <Lock className="inline w-3 h-3 ml-1 text-gray-400" />}
           </Label>
           <Input
             id={field.id}
@@ -31,7 +32,8 @@ export function FormField({ field, value, onChange }) {
             onChange={(e) => onChange(e.target.value)}
             required={field.required}
             placeholder={field.placeholder}
-            className="mt-1"
+            readOnly={field.readonly}
+            className={cn("mt-1", field.readonly && "bg-gray-50 text-gray-600 cursor-not-allowed border-gray-200")}
           />
         </div>
       )

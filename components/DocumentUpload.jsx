@@ -3,8 +3,11 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { FileText, Upload } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export function DocumentUpload({ onFileUpload }) {
+  const router = useRouter()
+
   const handleFileUpload = (event) => {
     const file = event.target.files?.[0]
     if (file) {
@@ -22,6 +25,10 @@ export function DocumentUpload({ onFileUpload }) {
     if (file) {
       onFileUpload(file)
     }
+  }
+
+  const handleCreateDocument = () => {
+    router.push("/create")
   }
 
   return (
@@ -80,9 +87,10 @@ export function DocumentUpload({ onFileUpload }) {
           <p className="text-gray-600 text-sm sm:text-base mt-6 sm:mt-8">No ChainDoX Document?</p>
 
           {/* Action Links */}
-          <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-8 text-sm">
-            <button className="text-red-600 hover:text-red-800 underline">Load Demo ChainDoX Document</button>
-            <button className="text-red-600 hover:text-red-800 underline">Create ChainDoX Document</button>
+          <div className="flex justify-center">
+            <button onClick={handleCreateDocument} className="text-red-600 hover:text-red-800 underline text-sm">
+              Create ChainDoX Document
+            </button>
           </div>
         </div>
       </Card>

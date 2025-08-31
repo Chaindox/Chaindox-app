@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Settings, X, Menu, Home } from "lucide-react"
+import { Settings, X, Menu, Home, Plus } from "lucide-react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
@@ -11,6 +11,10 @@ export function Header({ onClose, showCloseButton = false, showHomeButton = fals
 
   const handleHomeClick = () => {
     router.push("/")
+  }
+
+  const handleCreateClick = () => {
+    router.push("/create")
   }
 
   return (
@@ -42,10 +46,17 @@ export function Header({ onClose, showCloseButton = false, showHomeButton = fals
           </Button>
           {!showCloseButton && (
             <>
-              <Button variant="outline" className="text-red-600 border-red-600 hover:bg-red-50 bg-white/80">
+              <Button
+                variant="outline"
+                className="text-red-600 border-red-600 hover:bg-red-50 bg-white/80"
+                onClick={handleCreateClick}
+              >
+                <Plus className="w-4 h-4 mr-2" />
                 Create Doc
               </Button>
-              <Button className="bg-red-600 hover:bg-red-700">Verify Doc</Button>
+              <Button className="bg-red-600 hover:bg-red-700" onClick={handleHomeClick}>
+                Verify Doc
+              </Button>
             </>
           )}
           {showCloseButton && onClose && (
@@ -83,10 +94,17 @@ export function Header({ onClose, showCloseButton = false, showHomeButton = fals
             </div>
             {!showCloseButton && (
               <>
-                <Button variant="outline" className="text-red-600 border-red-600 hover:bg-red-50 w-full bg-transparent">
+                <Button
+                  variant="outline"
+                  className="text-red-600 border-red-600 hover:bg-red-50 w-full bg-transparent"
+                  onClick={handleCreateClick}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
                   Create Doc
                 </Button>
-                <Button className="bg-red-600 hover:bg-red-700 w-full">Verify Doc</Button>
+                <Button className="bg-red-600 hover:bg-red-700 w-full" onClick={handleHomeClick}>
+                  Verify Doc
+                </Button>
               </>
             )}
             <Button variant="ghost" className="w-full justify-start">

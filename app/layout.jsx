@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata = {
   title: "ChainDoX - Document Verification",
   description: "Your Data made Secure and Transferable",
-    generator: 'v0.dev'
+    generator: 'v0.app'
 }
 
 export default function RootLayout({ children }) {

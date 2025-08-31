@@ -1,0 +1,25 @@
+"data": {
+      "invoice_number": "INV-NEW-'$(date +%s)'",
+      "issue_date": "2024-01-15",
+      "invoice_date": "2024-01-15",
+      "payment_due_date": "2024-02-15",
+      "buyer": {
+        "name": "NEW Company",
+        "address": "999 New St"
+      },
+      "invoicee": {
+        "name": "NEW Company",
+        "address": "999 New St"
+      },
+      "sellers_bank": {
+        "name": "Bank of Commerce",
+        "swift_code": "BCOMSG2X"
+      },
+      "seller": {
+        "name": "XYZ Trading",
+        "address": "456 Trade Ave",
+        "tax_id": "TAX123456"
+      },
+      "seller_bank_account": "SG12345678901234567890",
+      "invoice_amount": 25000
+    },

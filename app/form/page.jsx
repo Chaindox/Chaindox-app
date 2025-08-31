@@ -7,29 +7,61 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Header } from "@/components/Header"
 import { FormStepper } from "@/components/FormStepper"
 import { FormField } from "@/components/FormField"
-import { formConfig } from "@/config/formConfig"
+import { WarningPopup } from "@/components/WarningPopup"
+import { formConfigs } from "@/config/formConfigs"
 
 export default function FormPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState({})
   const [completedSteps, setCompletedSteps] = useState(new Set())
-  const [uploadedFile, setUploadedFile] = useState(null)
+  const [selectedDocumentType, setSelectedDocumentType] = useState(null)
+  const [documentNumber, setDocumentNumber] = useState("")
+  const [formConfig, setFormConfig] = useState(null)
+  const [warningPopup, setWarningPopup] = useState({ isOpen: false, title: "", message: "", type: "warning" })
+
+  const showWarning = (title, message, type = "warning") => {
+    setWarningPopup({ isOpen: true, title, message, type })
+  }
+
+  const closeWarning = () => {
+    setWarningPopup({ isOpen: false, title: "", message: "", type: "warning" })
+  }
 
   useEffect(() => {
-    // Get uploaded file info from localStorage
-    const fileInfo = localStorage.getItem("uploadedFile")
-    if (fileInfo) {
-      setUploadedFile(JSON.parse(fileInfo))
+    // Get document type info from localStorage
+    const docTypeInfo = localStorage.getItem("selectedDocumentType")
+    const docNumber = localStorage.getItem("documentNumber")
+
+    if (docTypeInfo && docNumber) {
+      const docType = JSON.parse(docTypeInfo)
+      setSelectedDocumentType(docType)
+      setDocumentNumber(docNumber)
+      setFormConfig(formConfigs[docType.id])
+
+      // Pre-fill document number in form data based on document type
+      const numberFieldMap = {
+        invoice: "invoice_number",
+        "purchase-order": "poNumber",
+        "bill-of-lading": "bolNumber",
+        "packing-list": "packingListNumber",
+        "certificate-of-origin": "certificateNumber",
+      }
+
+      const numberField = numberFieldMap[docType.id]
+      if (numberField) {
+        setFormData((prev) => ({ ...prev, [numberField]: docNumber }))
+      }
     } else {
-      // If no file info, redirect to home
+      // If no document type selected, redirect to home
       router.push("/")
     }
 
     // Load saved form data if exists
     const savedFormData = localStorage.getItem("formData")
     if (savedFormData) {
-      setFormData(JSON.parse(savedFormData))
+      const parsed = JSON.parse(savedFormData)
+      setFormData((prev) => ({ ...prev, ...parsed }))
     }
 
     const savedStep = localStorage.getItem("currentStep")
@@ -51,6 +83,8 @@ export default function FormPage() {
   }
 
   const validateStep = (stepIndex) => {
+    if (!formConfig) return false
+
     const step = formConfig.steps[stepIndex]
     const requiredFields = step.fields.filter((field) => field.required)
 
@@ -58,6 +92,20 @@ export default function FormPage() {
       const value = formData[field.id]
       return value !== undefined && value !== "" && value !== null
     })
+  }
+
+  const getIncompleteFields = (stepIndex) => {
+    if (!formConfig) return []
+
+    const step = formConfig.steps[stepIndex]
+    const requiredFields = step.fields.filter((field) => field.required)
+
+    return requiredFields
+      .filter((field) => {
+        const value = formData[field.id]
+        return value === undefined || value === "" || value === null
+      })
+      .map((field) => field.label)
   }
 
   const handleNext = () => {
@@ -73,7 +121,12 @@ export default function FormPage() {
         localStorage.setItem("completedSteps", JSON.stringify([...newCompletedSteps]))
       }
     } else {
-      alert("Please fill in all required fields before proceeding.")
+      const incompleteFields = getIncompleteFields(currentStep)
+      showWarning(
+        "Required Fields Missing",
+        `Please fill in the following required fields before proceeding:• ${incompleteFields.join(" • ")}`,
+        "warning",
+      )
     }
   }
 
@@ -85,11 +138,66 @@ export default function FormPage() {
     }
   }
 
+  const transformInvoiceData = (formData) => {
+    return {
+      invoice_number: formData.invoice_number,
+      issue_date: formData.issue_date,
+      invoice_date: formData.invoice_date,
+      payment_due_date: formData.payment_due_date,
+      buyer: {
+        name: formData.buyer_name,
+        address: formData.buyer_address,
+      },
+      invoicee: {
+        name: formData.invoicee_name,
+        address: formData.invoicee_address,
+      },
+      sellers_bank: {
+        name: formData.sellers_bank_name,
+        swift_code: formData.sellers_bank_swift_code,
+      },
+      seller: {
+        name: formData.seller_name,
+        address: formData.seller_address,
+        tax_id: formData.seller_tax_id,
+      },
+      seller_bank_account: formData.seller_bank_account,
+      invoice_amount: formData.invoice_amount,
+    }
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault()
 
-    // Store final form data for success page
-    localStorage.setItem("submittedData", JSON.stringify(formData))
+    // Validate final step before submission
+    if (!validateStep(currentStep)) {
+      const incompleteFields = getIncompleteFields(currentStep)
+      showWarning(
+        "Cannot Submit Document",
+        `Please fill in the following required fields before submitting:• ${incompleteFields.join(" • ")}`,
+        "error",
+      )
+      return
+    }
+
+    // Transform data based on document type
+    let transformedData = formData
+    if (selectedDocumentType.id === "invoice") {
+      transformedData = transformInvoiceData(formData)
+    }
+
+    // Create comprehensive document data
+    const documentData = {
+      documentType: selectedDocumentType,
+      documentNumber: documentNumber,
+      data: transformedData,
+      createdAt: new Date().toISOString(),
+      version: "1.0",
+      status: "completed",
+    }
+
+    // Store final document data for success page
+    localStorage.setItem("completedDocument", JSON.stringify(documentData))
 
     // Clear form progress
     localStorage.removeItem("currentStep")
@@ -101,15 +209,26 @@ export default function FormPage() {
   }
 
   const handleClose = () => {
+    showWarning(
+      "Discard Changes?",
+      "Are you sure you want to close this form? All unsaved changes will be lost.",
+      "warning",
+      true, // showCancel
+    )
+  }
+
+  const confirmClose = () => {
     // Clear all stored data
-    localStorage.removeItem("uploadedFile")
+    localStorage.removeItem("selectedDocumentType")
+    localStorage.removeItem("documentNumber")
     localStorage.removeItem("formData")
     localStorage.removeItem("currentStep")
     localStorage.removeItem("completedSteps")
+    closeWarning()
     router.push("/")
   }
 
-  if (!uploadedFile) {
+  if (!selectedDocumentType || !formConfig) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -123,6 +242,26 @@ export default function FormPage() {
   const currentStepConfig = formConfig.steps[currentStep]
   const isLastStep = currentStep === formConfig.steps.length - 1
 
+  // Calculate grid layout
+  const fields = currentStepConfig.fields
+  const gridFields = []
+
+  for (let i = 0; i < fields.length; i++) {
+    const field = fields[i]
+    if (field.type === "textarea") {
+      // Textarea fields take full width
+      gridFields.push({ field, span: "full" })
+    } else {
+      // Check if this is the last field and it's odd
+      const remainingFields = fields.slice(i).filter((f) => f.type !== "textarea")
+      if (remainingFields.length === 1) {
+        gridFields.push({ field, span: "full" })
+      } else {
+        gridFields.push({ field, span: "half" })
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header onClose={handleClose} showCloseButton />
@@ -131,17 +270,25 @@ export default function FormPage() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="bg-white rounded-lg shadow-xl p-4 sm:p-8">
           <div className="mb-6">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">{currentStepConfig.title}</h1>
+            <div className="flex items-center space-x-2 mb-2">
+              <span className="text-2xl">{selectedDocumentType.icon}</span>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">{currentStepConfig.title}</h1>
+            </div>
             <p className="text-gray-600 mb-4 text-sm sm:text-base">{currentStepConfig.description}</p>
-            <p className="text-xs sm:text-sm text-gray-500">
-              Document uploaded: <span className="font-semibold text-red-600 break-all">{uploadedFile.name}</span>
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0">
+              <p className="text-xs sm:text-sm text-gray-500">
+                Document Type: <span className="font-semibold text-red-600">{selectedDocumentType.name}</span>
+              </p>
+              <p className="text-xs sm:text-sm text-gray-500">
+                Document Number: <span className="font-semibold text-blue-600">{documentNumber}</span>
+              </p>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              {currentStepConfig.fields.map((field) => (
-                <div key={field.id} className={field.type === "textarea" ? "lg:col-span-2" : ""}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {gridFields.map(({ field, span }, index) => (
+                <div key={field.id} className={span === "full" ? "md:col-span-2" : ""}>
                   <FormField
                     field={field}
                     value={formData[field.id]}
@@ -178,7 +325,7 @@ export default function FormPage() {
                     type="submit"
                     className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 w-full sm:w-auto"
                   >
-                    Submit Shipment Details
+                    Create {selectedDocumentType.name}
                   </Button>
                 ) : (
                   <Button
@@ -195,6 +342,18 @@ export default function FormPage() {
           </form>
         </div>
       </main>
+
+      <WarningPopup
+        isOpen={warningPopup.isOpen}
+        onClose={closeWarning}
+        title={warningPopup.title}
+        message={warningPopup.message}
+        type={warningPopup.type}
+        showCancel={warningPopup.title === "Discard Changes?"}
+        confirmText={warningPopup.title === "Discard Changes?" ? "Discard" : "OK"}
+        onConfirm={warningPopup.title === "Discard Changes?" ? confirmClose : closeWarning}
+        onCancel={closeWarning}
+      />
     </div>
   )
 }

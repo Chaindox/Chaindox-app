@@ -3,36 +3,29 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { CheckCircle, RotateCcw } from "lucide-react"
+import { CheckCircle, RotateCcw, Download } from "lucide-react"
 
 export default function SuccessPage() {
   const router = useRouter()
-  const [uploadedFile, setUploadedFile] = useState(null)
-  const [submittedData, setSubmittedData] = useState({})
+  const [documentData, setDocumentData] = useState(null)
 
   useEffect(() => {
     // Get data from localStorage
-    const fileInfo = localStorage.getItem("uploadedFile")
-    const formData = localStorage.getItem("submittedData")
+    const completedDoc = localStorage.getItem("completedDocument")
 
-    if (fileInfo) {
-      setUploadedFile(JSON.parse(fileInfo))
-    }
-
-    if (formData) {
-      setSubmittedData(JSON.parse(formData))
-    }
-
-    // If no data found, redirect to home
-    if (!fileInfo || !formData) {
+    if (completedDoc) {
+      setDocumentData(JSON.parse(completedDoc))
+    } else {
+      // If no data found, redirect to home
       router.push("/")
     }
   }, [router])
 
   const handleStartOver = () => {
     // Clear all stored data
-    localStorage.removeItem("uploadedFile")
-    localStorage.removeItem("submittedData")
+    localStorage.removeItem("selectedDocumentType")
+    localStorage.removeItem("documentNumber")
+    localStorage.removeItem("completedDocument")
     localStorage.removeItem("formData")
     localStorage.removeItem("currentStep")
     localStorage.removeItem("completedSteps")
@@ -41,7 +34,22 @@ export default function SuccessPage() {
     router.push("/")
   }
 
-  if (!uploadedFile || !submittedData) {
+  const handleDownloadJson = () => {
+    if (!documentData) return
+
+    // Create and download JSON file
+    const dataStr = JSON.stringify(documentData, null, 2)
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
+
+    const exportFileDefaultName = `${documentData.documentNumber.toLowerCase()}-chaindox-document.json`
+
+    const linkElement = document.createElement("a")
+    linkElement.setAttribute("href", dataUri)
+    linkElement.setAttribute("download", exportFileDefaultName)
+    linkElement.click()
+  }
+
+  if (!documentData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -61,49 +69,61 @@ export default function SuccessPage() {
             <CheckCircle className="w-12 h-12 text-green-600 animate-fade-in-up animation-delay-500" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 animate-fade-in-up animation-delay-1000">
-            Submission Successful!
+            Document Created Successfully!
           </h1>
           <p className="text-gray-600 animate-fade-in-up animation-delay-1500">
-            Your shipment details have been successfully submitted and are now being processed.
+            Your {documentData.documentType.name} has been successfully created and is ready for use.
           </p>
         </div>
 
-        {/* Submission Details Card */}
+        {/* Document Details Card */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 animate-slide-up animation-delay-2000">
-          <h3 className="font-semibold text-gray-900 mb-4">Submission Details</h3>
+          <h3 className="font-semibold text-gray-900 mb-4">Document Details</h3>
           <div className="space-y-3">
-            <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-              <span className="text-sm text-gray-600">Document</span>
-              <span className="text-sm font-medium text-gray-900 truncate ml-4 max-w-[200px]" title={uploadedFile.name}>
-                {uploadedFile.name}
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-sm text-gray-600">Document Type</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">{documentData.documentType.icon}</span>
+                <span className="text-sm font-medium text-gray-900">{documentData.documentType.name}</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-sm text-gray-600">Document Number</span>
+              <span className="text-sm font-medium text-blue-600">{documentData.documentNumber}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-sm text-gray-600">Created Date</span>
+              <span className="text-sm font-medium text-gray-900">
+                {new Date(documentData.createdAt).toLocaleDateString()}
               </span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-              <span className="text-sm text-gray-600">Company</span>
-              <span className="text-sm font-medium text-gray-900">{submittedData.companyName || "N/A"}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-              <span className="text-sm text-gray-600">Submission ID</span>
-              <span className="text-sm font-medium text-blue-600">CHX-{Date.now().toString().slice(-6)}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
-              <span className="text-sm text-gray-600">Contact</span>
-              <span className="text-sm font-medium text-gray-900">{submittedData.email || "N/A"}</span>
+            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <span className="text-sm text-gray-600">Version</span>
+              <span className="text-sm font-medium text-gray-900">{documentData.version}</span>
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-sm text-gray-600">Status</span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Processing
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 capitalize">
+                {documentData.status}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Action Button */}
-        <div className="animate-fade-in animation-delay-2500">
-          <Button onClick={handleStartOver} className="w-full bg-red-600 hover:bg-red-700 text-white">
+        {/* Action Buttons */}
+        <div className="space-y-3 animate-fade-in animation-delay-2500">
+          <Button onClick={handleDownloadJson} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+            <Download className="w-4 h-4 mr-2" />
+            Download JSON Document
+          </Button>
+
+          <Button
+            onClick={handleStartOver}
+            variant="outline"
+            className="w-full bg-transparent border-red-200 text-red-600 hover:bg-red-50"
+          >
             <RotateCcw className="w-4 h-4 mr-2" />
-            Submit Another Document
+            Create Another Document
           </Button>
         </div>
       </div>
