@@ -84,11 +84,10 @@ export function DocumentUpload({ onFileUpload }) {
           </div>
 
           {/* No Document Text */}
-          
-          {/* Action Links */}
-          <div className="flex flex-col items-center justify-center space-y-2">
-            <p className="text-gray-600 text-sm mt-6 sm:mt-8">No ChainDoX Document?</p>
+          <p className="text-gray-600 text-sm sm:text-base mt-6 sm:mt-8">No ChainDoX Document?</p>
 
+          {/* Action Links */}
+          <div className="flex justify-center">
             <button onClick={handleCreateDocument} className="text-red-600 hover:text-red-800 underline text-sm">
               Create ChainDoX Document
             </button>

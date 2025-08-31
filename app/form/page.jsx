@@ -138,31 +138,98 @@ export default function FormPage() {
     }
   }
 
-  const transformInvoiceData = (formData) => {
+  const generateUUID = () => {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0
+      const v = c == "x" ? r : (r & 0x3) | 0x8
+      return v.toString(16)
+    })
+  }
+
+  const transformToOpenAttestationFormat = (formData, documentType, documentNumber) => {
+    // Generate UUIDs for each field
+    const generateFieldWithUUID = (value, type = "string") => {
+      return `${generateUUID()}:${type}:${value}`
+    }
+
+    // Transform form data based on document type
+    let transformedData = {}
+
+    if (documentType.id === "invoice") {
+      transformedData = {
+        invoice_number: generateFieldWithUUID(formData.invoice_number || documentNumber),
+        issue_date: generateFieldWithUUID(formData.issue_date || ""),
+        invoice_date: generateFieldWithUUID(formData.invoice_date || ""),
+        payment_due_date: generateFieldWithUUID(formData.payment_due_date || ""),
+        buyer: {
+          name: generateFieldWithUUID(formData.buyer_name || ""),
+          address: generateFieldWithUUID(formData.buyer_address || ""),
+        },
+        invoicee: {
+          name: generateFieldWithUUID(formData.invoicee_name || ""),
+          address: generateFieldWithUUID(formData.invoicee_address || ""),
+        },
+        sellers_bank: {
+          name: generateFieldWithUUID(formData.sellers_bank_name || ""),
+          swift_code: generateFieldWithUUID(formData.sellers_bank_swift_code || ""),
+        },
+        seller: {
+          name: generateFieldWithUUID(formData.seller_name || ""),
+          address: generateFieldWithUUID(formData.seller_address || ""),
+          tax_id: generateFieldWithUUID(formData.seller_tax_id || ""),
+        },
+        seller_bank_account: generateFieldWithUUID(formData.seller_bank_account || ""),
+        invoice_amount: generateFieldWithUUID(formData.invoice_amount || 0, "number"),
+      }
+    } else {
+      // For other document types, transform all fields generically
+      Object.keys(formData).forEach((key) => {
+        const value = formData[key]
+        const type = typeof value === "number" ? "number" : typeof value === "boolean" ? "boolean" : "string"
+        transformedData[key] = generateFieldWithUUID(value, type)
+      })
+    }
+
+    // Generate a random hash for signature
+    const generateRandomHash = () => {
+      return Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")
+    }
+
+    const targetHash = generateRandomHash()
+
     return {
-      invoice_number: formData.invoice_number,
-      issue_date: formData.issue_date,
-      invoice_date: formData.invoice_date,
-      payment_due_date: formData.payment_due_date,
-      buyer: {
-        name: formData.buyer_name,
-        address: formData.buyer_address,
+      version: "https://schema.openattestation.com/2.0/schema.json",
+      data: {
+        $template: {
+          name: generateFieldWithUUID("main"),
+          type: generateFieldWithUUID("EMBEDDED_RENDERER"),
+          url: generateFieldWithUUID("https://tutorial-renderer.openattestation.com"),
+        },
+        recipient: {
+          name: generateFieldWithUUID("ChainDox"),
+        },
+        issuers: [
+          {
+            name: generateFieldWithUUID("ChainDox Issuer"),
+            documentStore: generateFieldWithUUID("0x2E045A7aB513d1129636d9894fFB386f6e0A46b8"),
+            identityProof: {
+              type: generateFieldWithUUID("DNS-TXT"),
+              location: generateFieldWithUUID("chaindox.openattestation.com"),
+            },
+          },
+        ],
+        data: {
+          document_code: generateFieldWithUUID(documentType.name),
+          data: transformedData,
+          draft: generateFieldWithUUID(false, "boolean"),
+        },
       },
-      invoicee: {
-        name: formData.invoicee_name,
-        address: formData.invoicee_address,
+      signature: {
+        type: "SHA3MerkleProof",
+        targetHash: targetHash,
+        proof: [],
+        merkleRoot: targetHash,
       },
-      sellers_bank: {
-        name: formData.sellers_bank_name,
-        swift_code: formData.sellers_bank_swift_code,
-      },
-      seller: {
-        name: formData.seller_name,
-        address: formData.seller_address,
-        tax_id: formData.seller_tax_id,
-      },
-      seller_bank_account: formData.seller_bank_account,
-      invoice_amount: formData.invoice_amount,
     }
   }
 
@@ -180,17 +247,14 @@ export default function FormPage() {
       return
     }
 
-    // Transform data based on document type
-    let transformedData = formData
-    if (selectedDocumentType.id === "invoice") {
-      transformedData = transformInvoiceData(formData)
-    }
+    // Transform data to OpenAttestation format
+    const openAttestationData = transformToOpenAttestationFormat(formData, selectedDocumentType, documentNumber)
 
-    // Create comprehensive document data
+    // Create comprehensive document data for display
     const documentData = {
       documentType: selectedDocumentType,
       documentNumber: documentNumber,
-      data: transformedData,
+      data: openAttestationData,
       createdAt: new Date().toISOString(),
       version: "1.0",
       status: "completed",
