@@ -1,0 +1,57 @@
+{
+  "version": "https://schema.openattestation.com/2.0/schema.json",
+  "data": {
+    "$template": {
+      "name": "2ed5068c-b9b0-475b-afe7-7c322c530c1f:string:main",
+      "type": "37c8d3d8-a308-4ae8-b32d-05a035e1fdfb:string:EMBEDDED_RENDERER",
+      "url": "0dc08c19-4be2-47b1-bddb-3eaab08872ed:string:https://tutorial-renderer.openattestation.com"
+    },
+    "recipient": {
+      "name": "9a3953e1-8242-47a6-a75d-aa3d3d61c55e:string:ChainDox"
+    },
+    "issuers": [
+      {
+        "name": "aa4deb7b-932e-4006-8250-feeae7d9689c:string:john doe",
+        "documentStore": "c032365e-4a13-4af3-9013-83b7b92bdd9b:string:0x2E045A7aB513d1129636d9894fFB386f6e0A46b8",
+        "identityProof": {
+          "type": "5bce99ee-550b-42ff-af6b-160565649bbd:string:DNS-TXT",
+          "location": "380b06c2-ebb5-4bac-93cc-5e2e33871e2f:string:elegant-amaranth-guan.sandbox.openattestation.com"
+        }
+      }
+    ],
+    "data": {
+      "documentType": {
+        "id": "8f14e14c-7326-42c7-a7dc-024030a6113e:string:purchase-order",
+        "name": "67647559-5675-4648-bc3c-261e159ba378:string:Purchase Order",
+        "prefix": "fb121f5e-30a5-4c9f-8fea-2583fd419f89:string:PO",
+        "description": "102d1265-7d3a-41ee-af34-59b2845bc3b4:string:Purchase order for procurement",
+        "icon": "70d4d365-8791-4535-bc40-e3ede1918713:string:🛒"
+      },
+      "documentNumber": "191f77c5-190b-407a-9864-12a09c6a702a:string:PO-1756604717",
+      "data": {
+        "poNumber": "0cf88187-7e0b-4319-b62e-bfb22f5d46f0:string:PO-1756604717",
+        "poDate": "2942b34b-ad56-4181-9286-291b8f9f4345:string:2025-09-03T16:00:00.000Z",
+        "expectedDelivery": "1484bddc-d8f0-46ad-ac12-86177f02311e:string:2025-09-05T16:00:00.000Z",
+        "priority": "d0550f49-4e2d-480d-8e9a-f8f3042bffc9:string:medium",
+        "vendorName": "d802c0f9-2531-4b3d-9b55-8b181fb77349:string:as",
+        "vendorContact": "b55615fc-3406-4f03-90d4-41b4d473e071:string:as",
+        "vendorEmail": "60f1cac8-9b22-4113-b676-0fdf1423be71:string:asas",
+        "deliveryAddress": "12bb9003-0e47-44a5-b95a-8c3d3bdcbbe2:string:as",
+        "productName": "64fb868b-b427-4a5e-9f0b-00707a62a8d9:string:as",
+        "productCode": "9fbca373-367c-4ee7-a3c8-207bf1abcd7b:string:as",
+        "orderQuantity": "1e162953-9abc-4b7d-b144-8d91d1d728c9:string:1",
+        "unitCost": "5f1b7a4c-3144-41ad-bd86-863c927253f8:string:12",
+        "specifications": "db4be63a-3cfd-4030-8a03-b5106cac17d3:string:as"
+      },
+      "createdAt": "8674e33a-c966-416c-8869-88491d1ad8b3:string:2025-08-31T01:45:51.500Z",
+      "version": "3330cee6-73b8-4947-a927-405851246673:string:1.0",
+      "status": "76d9754d-3aeb-46dc-b7bf-f0be0eff75bd:string:completed"
+    }
+  },
+  "signature": {
+    "type": "SHA3MerkleProof",
+    "targetHash": "a29c18da38104e8dbffac9d3e6a59939cc32e8beb1841efbda7ad851b57d21c7",
+    "proof": [],
+    "merkleRoot": "a29c18da38104e8dbffac9d3e6a59939cc32e8beb1841efbda7ad851b57d21c7"
+  }
+}

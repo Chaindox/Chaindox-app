@@ -37,11 +37,22 @@ export default function SuccessPage() {
   const handleDownloadJson = () => {
     if (!documentData) return
 
+    // Create filename based on document type
+    const getFileName = (docType) => {
+      const typeMap = {
+        "Bill of Lading": "wrapped-Bill-of-Landing.json",
+        "Invoice": "wrapped-Invoice.json", 
+        "Purchase Order": "wrapped-purchase-order.json"
+      }
+      
+      return typeMap[docType] || `wrapped-${docType.toLowerCase().replace(/\s+/g, '-')}.json`
+    }
+
     // Create and download JSON file
     const dataStr = JSON.stringify(documentData, null, 2)
     const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
 
-    const exportFileDefaultName = `${documentData.documentNumber.toLowerCase()}-chaindox-document.json`
+    const exportFileDefaultName = getFileName(documentData.documentType.name)
 
     const linkElement = document.createElement("a")
     linkElement.setAttribute("href", dataUri)
