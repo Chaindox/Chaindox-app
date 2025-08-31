@@ -1,0 +1,58 @@
+{
+  "version": "https://schema.openattestation.com/2.0/schema.json",
+  "data": {
+    "$template": {
+      "name": "737ca323-d2ee-4090-bb6d-15dc9ca8223c:string:main",
+      "type": "d35425f2-dff4-4287-bae7-f93c05661a9e:string:EMBEDDED_RENDERER",
+      "url": "b21ca1a1-d02c-44b8-895e-009df10bcf0a:string:https://tutorial-renderer.openattestation.com"
+    },
+    "recipient": {
+      "name": "48adbff1-db1b-4bca-9d3a-3ab047a486fd:string:ChainDox"
+    },
+    "issuers": [
+      {
+        "name": "9bb141e7-627b-48e0-94bd-ecf3d58614d0:string:john doe",
+        "documentStore": "116c7c7d-1735-42b0-962d-d42f73829136:string:0x2E045A7aB513d1129636d9894fFB386f6e0A46b8",
+        "identityProof": {
+          "type": "ad9b192d-1189-4940-93de-09e459761351:string:DNS-TXT",
+          "location": "8db185bc-ee35-4f47-87b1-813c9cc745d3:string:elegant-amaranth-guan.sandbox.openattestation.com"
+        }
+      }
+    ],
+    "data": {
+      "document_code": "0bb568a6-8601-4716-bf1c-2f4817c748de:string:invoice",
+      "data": {
+        "invoice_number": "f1c99192-fa31-4e5b-be73-cdb7967b6ee6:string:INV-NEW-'$(date +%s)'",
+        "issue_date": "aa95002b-ca10-4dee-b00c-9445aad1c6b0:string:2024-01-15",
+        "invoice_date": "9f10a2e7-d199-42fd-b02a-d10e8017d4a4:string:2024-01-15",
+        "payment_due_date": "60aef2a9-768d-4431-82b2-d86d10bb0667:string:2024-02-15",
+        "buyer": {
+          "name": "338ca0fd-8d10-42f4-bf70-4e6231609a9f:string:NEW Company",
+          "address": "060dd978-673d-40a1-8594-78b713356107:string:999 New St"
+        },
+        "invoicee": {
+          "name": "ded9aa60-1471-4dac-b217-06c3ccb2e99f:string:NEW Company",
+          "address": "6e9563fa-cde4-4d17-b68a-c4841cf77090:string:999 New St"
+        },
+        "sellers_bank": {
+          "name": "25e9ea75-5ee1-465e-a619-47de636c8d3d:string:Bank of Commerce",
+          "swift_code": "6381ebc6-90a5-41ad-99e2-c603d9061738:string:BCOMSG2X"
+        },
+        "seller": {
+          "name": "63a40b22-5bb6-4c84-ac20-f5738b37d3f0:string:XYZ Trading",
+          "address": "27e2caea-b4d6-4143-9b3f-917dda680440:string:456 Trade Ave",
+          "tax_id": "fc3a08a0-21ea-44ee-a919-58a64baa279d:string:TAX123456"
+        },
+        "seller_bank_account": "fa8a9e5f-0a0f-4f69-8ffb-ae1597ae03bf:string:SG12345678901234567890",
+        "invoice_amount": "5e23c24c-062f-4ea0-840f-4a251c765680:number:25000"
+      },
+      "draft": "9994f3bc-1cb8-4cb7-bb5d-0c4fbce4c05b:boolean:false"
+    }
+  },
+  "signature": {
+    "type": "SHA3MerkleProof",
+    "targetHash": "80974b332e5a1cce41e2373e71fa116777e88fd3df1ff9101584bc6232508a6c",
+    "proof": [],
+    "merkleRoot": "80974b332e5a1cce41e2373e71fa116777e88fd3df1ff9101584bc6232508a6c"
+  }
+}

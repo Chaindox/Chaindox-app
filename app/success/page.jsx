@@ -34,30 +34,44 @@ export default function SuccessPage() {
     router.push("/")
   }
 
-  const handleDownloadJson = () => {
+  const handleDownloadJson = async () => {
     if (!documentData) return
 
-    // Create filename based on document type
+    // Get filename based on document type
     const getFileName = (docType) => {
       const typeMap = {
         "Bill of Lading": "wrapped-Bill-of-Landing.json",
-        "Invoice": "wrapped-Invoice.json", 
+        "Invoice": "wrapped-Invoice.json",
         "Purchase Order": "wrapped-purchase-order.json"
       }
-      
+
       return typeMap[docType] || `wrapped-${docType.toLowerCase().replace(/\s+/g, '-')}.json`
     }
 
-    // Create and download JSON file
-    const dataStr = JSON.stringify(documentData, null, 2)
-    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
+    try {
+      const fileName = getFileName(documentData.documentType.name)
 
-    const exportFileDefaultName = getFileName(documentData.documentType.name)
+      // Fetch the JSON file from config/jsons directory
+      const response = await fetch(`/config/jsons/${fileName}`)
 
-    const linkElement = document.createElement("a")
-    linkElement.setAttribute("href", dataUri)
-    linkElement.setAttribute("download", exportFileDefaultName)
-    linkElement.click()
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${fileName}`)
+      }
+
+      const jsonData = await response.json()
+
+      // Create and download JSON file
+      const dataStr = JSON.stringify(jsonData, null, 2)
+      const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
+
+      const linkElement = document.createElement("a")
+      linkElement.setAttribute("href", dataUri)
+      linkElement.setAttribute("download", fileName)
+      linkElement.click()
+    } catch (error) {
+      console.error('Error downloading JSON file:', error)
+      alert('Failed to download JSON file. Please try again.')
+    }
   }
 
   if (!documentData) {
