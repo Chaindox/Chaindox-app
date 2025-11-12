@@ -6,7 +6,6 @@ import { Header } from "@/components/Header"
 import { DocumentUpload } from "@/components/DocumentUpload"
 import { CookieNotice } from "@/components/CookieNotice"
 import { WarningPopup } from "@/components/WarningPopup"
-import { isValid, verifyDocument } from "@trustvc/trustvc";
 
 export default function HomePage() {
   const [showCookieNotice, setShowCookieNotice] = useState(true)
@@ -47,6 +46,7 @@ export default function HomePage() {
       const fileContent = await file.text();
       const vc = JSON.parse(fileContent);
 
+      const { isValid, verifyDocument } = await import("@trustvc/trustvc");
       const rpc = "https://rpc.ankr.com/xdc";
       const fragments = await verifyDocument(vc, rpc);
       const result = isValid(fragments);
