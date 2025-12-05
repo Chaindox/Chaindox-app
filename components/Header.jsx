@@ -1,13 +1,35 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Settings, X, Menu, Home, Plus } from "lucide-react"
-import { useState } from "react"
+import { Settings, X, Menu, Home, Plus, FileCheck } from "lucide-react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
 export function Header({ onClose, showCloseButton = false, showHomeButton = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [hasVerifiedDocument, setHasVerifiedDocument] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    // Check if there's a verified document in localStorage
+    const checkVerifiedDocument = () => {
+      const verifiedDoc = localStorage.getItem("verifiedDocument")
+      setHasVerifiedDocument(!!verifiedDoc)
+    }
+
+    checkVerifiedDocument()
+
+    // Listen for storage changes (when document is verified)
+    window.addEventListener("storage", checkVerifiedDocument)
+
+    // Also check periodically in case localStorage is updated in the same tab
+    const interval = setInterval(checkVerifiedDocument, 1000)
+
+    return () => {
+      window.removeEventListener("storage", checkVerifiedDocument)
+      clearInterval(interval)
+    }
+  }, [])
 
   const handleHomeClick = () => {
     router.push("/")
@@ -15,6 +37,10 @@ export function Header({ onClose, showCloseButton = false, showHomeButton = fals
 
   const handleCreateClick = () => {
     router.push("/create")
+  }
+
+  const handleManageAssetsClick = () => {
+    router.push("/assets")
   }
 
   return (
@@ -46,6 +72,16 @@ export function Header({ onClose, showCloseButton = false, showHomeButton = fals
           </Button>
           {!showCloseButton && (
             <>
+              {hasVerifiedDocument && (
+                <Button
+                  variant="outline"
+                  className="text-orange-600 border-orange-600 hover:bg-orange-50 bg-white/80"
+                  onClick={handleManageAssetsClick}
+                >
+                  <FileCheck className="w-4 h-4 mr-2" />
+                  Manage Assets
+                </Button>
+              )}
               <Button
                 variant="outline"
                 className="text-red-600 border-red-600 hover:bg-red-50 bg-white/80"
@@ -94,6 +130,16 @@ export function Header({ onClose, showCloseButton = false, showHomeButton = fals
             </div>
             {!showCloseButton && (
               <>
+                {hasVerifiedDocument && (
+                  <Button
+                    variant="outline"
+                    className="text-orange-600 border-orange-600 hover:bg-orange-50 w-full bg-transparent"
+                    onClick={handleManageAssetsClick}
+                  >
+                    <FileCheck className="w-4 h-4 mr-2" />
+                    Manage Assets
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   className="text-red-600 border-red-600 hover:bg-red-50 w-full bg-transparent"

@@ -1,0 +1,124 @@
+.
+├── app
+│   ├── api
+│   │   └── verify.ts
+│   ├── assets
+│   │   └── page.tsx
+│   ├── create
+│   │   └── page.jsx
+│   ├── form
+│   │   └── page.jsx
+│   ├── globals.css
+│   ├── layout.jsx
+│   ├── not-found.jsx
+│   ├── page.tsx
+│   ├── success
+│   │   └── page.jsx
+│   └── utils
+├── components
+│   ├── AssetManagement.tsx
+│   ├── CookieNotice.jsx
+│   ├── DocumentTypeSelector.jsx
+│   ├── DocumentUpload.jsx
+│   ├── EndorsementChain.tsx
+│   ├── FormField.jsx
+│   ├── FormStepper.jsx
+│   ├── Header.jsx
+│   ├── SuccessPage.tsx
+│   ├── WarningPopup.jsx
+│   ├── theme-provider.tsx
+│   └── ui
+│       ├── accordion.tsx
+│       ├── alert-dialog.tsx
+│       ├── alert.tsx
+│       ├── aspect-ratio.tsx
+│       ├── avatar.tsx
+│       ├── badge.tsx
+│       ├── breadcrumb.tsx
+│       ├── button.tsx
+│       ├── calendar.tsx
+│       ├── card.tsx
+│       ├── carousel.tsx
+│       ├── chart.tsx
+│       ├── checkbox.tsx
+│       ├── collapsible.tsx
+│       ├── command.tsx
+│       ├── context-menu.tsx
+│       ├── dialog.tsx
+│       ├── drawer.tsx
+│       ├── dropdown-menu.tsx
+│       ├── form.tsx
+│       ├── hover-card.tsx
+│       ├── input-otp.tsx
+│       ├── input.tsx
+│       ├── label.tsx
+│       ├── menubar.tsx
+│       ├── navigation-menu.tsx
+│       ├── pagination.tsx
+│       ├── popover.tsx
+│       ├── progress.tsx
+│       ├── radio-group.tsx
+│       ├── resizable.tsx
+│       ├── scroll-area.tsx
+│       ├── select.tsx
+│       ├── separator.tsx
+│       ├── sheet.tsx
+│       ├── sidebar.tsx
+│       ├── skeleton.tsx
+│       ├── slider.tsx
+│       ├── sonner.tsx
+│       ├── switch.tsx
+│       ├── table.tsx
+│       ├── tabs.tsx
+│       ├── textarea.tsx
+│       ├── toast.tsx
+│       ├── toaster.tsx
+│       ├── toggle-group.tsx
+│       ├── toggle.tsx
+│       ├── tooltip.tsx
+│       ├── use-mobile.tsx
+│       └── use-toast.ts
+├── components.json
+├── config
+│   ├── documentTypes.js
+│   ├── formConfig.js
+│   ├── formConfigs.js
+│   └── jsons
+│       ├── wrapped-Bill-of-Landing.json
+│       ├── wrapped-Invoice.json
+│       └── wrapped-purchase-order.json
+├── hooks
+│   ├── use-mobile.tsx
+│   └── use-toast.ts
+├── lib
+│   └── utils.ts
+├── next-env.d.ts
+├── next.config.mjs
+├── package-lock.json
+├── package.json
+├── pnpm-lock.yaml
+├── postcss.config.mjs
+├── project_structure.txt
+├── public
+│   ├── config
+│   │   └── jsons
+│   │       ├── wrapped-Bill-of-Landing.json
+│   │       ├── wrapped-Invoice.json
+│   │       └── wrapped-purchase-order.json
+│   ├── images
+│   │   ├── chaindox-bg.png
+│   │   └── tradetrust-logo.png
+│   ├── placeholder-logo.png
+│   ├── placeholder-logo.svg
+│   ├── placeholder-user.jpg
+│   ├── placeholder.jpg
+│   └── placeholder.svg
+├── readme.txt
+├── reference
+│   └── invoice-structure.txt
+├── styles
+│   └── globals.css
+├── tailwind.config.ts
+└── tsconfig.json
+
+19 directories, 102 files
