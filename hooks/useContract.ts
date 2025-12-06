@@ -33,24 +33,40 @@ export function useContract(account: string, signer: Signer | null) {
   const loadDocument = async (parsedData: VerifiedDocument) => {
     try {
       const vc = parsedData.signedW3CDocument || parsedData;
+      console.log("1. Document VC:", { hasCredentialStatus: !!vc.credentialStatus });
+
+      // Validate document structure
+      if (!vc.credentialStatus || !vc.credentialStatus.tokenRegistry || !vc.credentialStatus.tokenId) {
+        console.error("Invalid document structure:", vc);
+        return {
+          success: false,
+          error: "Invalid document: missing credentialStatus information. Please verify the document again.",
+        };
+      }
+
+      console.log("2. Initializing provider...");
       const _provider = new providers.JsonRpcProvider(CHAIN_CONFIG.rpcUrl);
 
       if (!_provider) {
         throw new Error("Provider initialization failed");
       }
 
+      console.log("3. Getting title escrow address...");
       const titleEscrowAddress = await getTitleEscrowAddress(
-        vc.credentialStatus!.tokenRegistry,
-        "0x" + vc.credentialStatus!.tokenId,
+        vc.credentialStatus.tokenRegistry,
+        "0x" + vc.credentialStatus.tokenId,
         _provider
       );
+      console.log("4. Title escrow address:", titleEscrowAddress);
 
+      console.log("5. Creating contract instance...");
       const contract = new ethers.Contract(
         titleEscrowAddress,
         v5Contracts.TitleEscrow__factory.abi,
         _provider
       );
 
+      console.log("6. Fetching contract state...");
       const [holder, beneficiary, prevHolder, prevBeneficiary, nominee] = await Promise.all([
         contract.holder(),
         contract.beneficiary(),
@@ -59,12 +75,22 @@ export function useContract(account: string, signer: Signer | null) {
         contract.nominee(),
       ]);
 
-      const _endorsementChain = await fetchEndorsementChain(
-        vc.credentialStatus!.tokenRegistry,
-        "0x" + vc.credentialStatus!.tokenId,
-        _provider as any,
-        vc?.id
-      );
+      console.log("7. Fetching endorsement chain...");
+      let _endorsementChain: any[] = [];
+      try {
+        _endorsementChain = await fetchEndorsementChain(
+          vc.credentialStatus.tokenRegistry,
+          "0x" + vc.credentialStatus.tokenId,
+          _provider as any,
+          vc?.id
+        );
+        console.log("8. Endorsement chain fetched successfully");
+      } catch (chainError: any) {
+        console.warn("Failed to fetch endorsement chain (continuing without it):", chainError.message);
+        console.warn("This is usually due to RPC provider block range limits. The document will still load.");
+        // Continue without endorsement chain - it's not critical for document loading
+      }
+      console.log("9. Contract state loaded successfully");
 
       setState({
         titleEscrowAddress,
@@ -78,11 +104,16 @@ export function useContract(account: string, signer: Signer | null) {
       });
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading document:", error);
+      console.error("Error details:", {
+        message: error.message,
+        code: error.code,
+        stack: error.stack?.split('\n')[0]
+      });
       return {
         success: false,
-        error: "Failed to load document data. Please try uploading again.",
+        error: `Failed to load document: ${error.message || 'Please check your internet connection and try again.'}`,
       };
     }
   };
@@ -122,19 +153,24 @@ export function useContract(account: string, signer: Signer | null) {
       // Refresh endorsement chain
       const savedDocument = localStorage.getItem(STORAGE_KEYS.VERIFIED_DOCUMENT);
       if (savedDocument) {
-        const parsedDoc: VerifiedDocument = JSON.parse(savedDocument);
-        const vc = parsedDoc.signedW3CDocument || parsedDoc;
-        const _provider = new providers.JsonRpcProvider(CHAIN_CONFIG.rpcUrl);
-        const _endorsementChain = await fetchEndorsementChain(
-          vc.credentialStatus!.tokenRegistry,
-          "0x" + vc.credentialStatus!.tokenId,
-          _provider as any,
-          vc?.id
-        );
-        setState((prev) => ({
-          ...prev,
-          endorsementChain: _endorsementChain as any,
-        }));
+        try {
+          const parsedDoc: VerifiedDocument = JSON.parse(savedDocument);
+          const vc = parsedDoc.signedW3CDocument || parsedDoc;
+          const _provider = new providers.JsonRpcProvider(CHAIN_CONFIG.rpcUrl);
+          const _endorsementChain = await fetchEndorsementChain(
+            vc.credentialStatus!.tokenRegistry,
+            "0x" + vc.credentialStatus!.tokenId,
+            _provider as any,
+            vc?.id
+          );
+          setState((prev) => ({
+            ...prev,
+            endorsementChain: _endorsementChain as any,
+          }));
+        } catch (chainError: any) {
+          console.warn("Failed to refresh endorsement chain:", chainError.message);
+          // Continue without updating endorsement chain
+        }
       }
 
       return {

@@ -40,27 +40,31 @@ const AssetsPage: React.FC = () => {
   // In app/assets/page.tsx - inside the useEffect
   useEffect(() => {
     const autoLoadDocument = async () => {
-      // ADD THESE DEBUG LOGS
-      console.log("🔍 Checking localStorage...");
+      // DEBUG
+      console.log("Checking localStorage...");
       const savedDoc = localStorage.getItem("verifiedDocument");
       const savedResult = localStorage.getItem("verificationResult");
-      console.log("📄 Saved document:", savedDoc ? "EXISTS" : "NOT FOUND");
-      console.log("✅ Saved result:", savedResult ? "EXISTS" : "NOT FOUND");
+      console.log("Saved document:", savedDoc ? "EXISTS" : "NOT FOUND");
+      console.log("Saved result:", savedResult ? "EXISTS" : "NOT FOUND");
 
       const loadResult = loadFromLocalStorage();
-      console.log("📦 Load result:", loadResult);
+      console.log("Load result:", loadResult);
 
       if (loadResult.success && loadResult.data) {
         setIsLoading(true);
-        console.log("🚀 Loading document into contract...");
+        console.log("Loading document into contract...");
         const contractLoadResult = await contract.loadDocument(loadResult.data);
-        console.log("📊 Contract load result:", contractLoadResult);
+        console.log("Contract load result:", contractLoadResult);
+
+        if (contractLoadResult.error) {
+          console.error("Contract load error:", contractLoadResult.error);
+        }
 
         if (!contractLoadResult.success) {
           setWarningPopup({
             isOpen: true,
             title: "Error Loading Document",
-            message: contractLoadResult.error || "Failed to load document",
+            message: contractLoadResult.error || "Failed to load document. Please verify the document again.",
             type: "error",
           });
         }
