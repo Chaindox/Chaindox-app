@@ -6,6 +6,10 @@ import { Header } from "@/components/Header"
 import { DocumentUpload } from "@/components/DocumentUpload"
 import { CookieNotice } from "@/components/CookieNotice"
 import { WarningPopup } from "@/components/WarningPopup"
+import { Button } from "@/components/ui/button"
+import { FileCheck } from "lucide-react"
+import { verifyDocument, createDocument } from "@/app/api/verify"
+import { Invoice } from "@/lib/types"
 
 export default function HomePage() {
   const [showCookieNotice, setShowCookieNotice] = useState(true)
@@ -24,6 +28,7 @@ export default function HomePage() {
   const [hasAttemptedUpload, setHasAttemptedUpload] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter()
+  const outputFile: string = 'output.json'
 
   const showWarning = (title: string, message: string, type: "info" | "error" | "success" = "info") => {
     setWarningPopup({ isOpen: true, title, message, type })
@@ -46,41 +51,47 @@ export default function HomePage() {
       const fileContent = await file.text();
       const vc = JSON.parse(fileContent);
 
-      const { isValid, verifyDocument } = await import("@trustvc/trustvc");
-      const rpc = "https://rpc.ankr.com/xdc";
-      const fragments = await verifyDocument(vc, rpc);
-      const result = isValid(fragments);
-      const documentIntegrity = isValid(fragments, ["DOCUMENT_INTEGRITY"]);
-      const documentStatus = isValid(fragments, ["DOCUMENT_STATUS"]);
-      const issuerIdentity = isValid(fragments, ["ISSUER_IDENTITY"]);
+      // Call the backend API instead of client-side verification
+      const result = await verifyDocument(vc);
 
       setVerificationResult({
-        VALIDITY: result,
-        DOCUMENT_INTEGRITY: documentIntegrity,
-        DOCUMENT_STATUS: documentStatus,
-        ISSUER_IDENTITY: issuerIdentity,
+        VALIDITY: result.VALIDITY,
+        DOCUMENT_INTEGRITY: result.DOCUMENT_INTEGRITY,
+        DOCUMENT_STATUS: result.DOCUMENT_STATUS,
+        ISSUER_IDENTITY: result.ISSUER_IDENTITY,
       });
 
-      const resultMessage = `
-        Overall Validity: ${result ? "✓ Valid" : "✗ Invalid"}
-        
-        Document Integrity: ${documentIntegrity ? "✓ Valid" : "✗ Invalid"}
-        Document Status: ${documentStatus ? "✓ Valid" : "✗ Invalid"}
-        Issuer Identity: ${issuerIdentity ? "✓ Valid" : "✗ Invalid"}
-      `;
+      // Store verified document in localStorage for asset management
+      if (result.VALIDITY) {
+        localStorage.setItem("verifiedDocument", fileContent);
 
-      showWarning(
-        result ? "Verification Successful" : "Verification Failed",
-        resultMessage,
-        result ? "success" : "error"
-      );
+        console.log(result.DOCUMENT_INTEGRITY);
+
+        localStorage.setItem(
+          "verificationResult",
+          JSON.stringify({
+            DOCUMENT_INTEGRITY: result.DOCUMENT_INTEGRITY,
+            DOCUMENT_STATUS: result.DOCUMENT_STATUS,
+            ISSUER_IDENTITY: result.ISSUER_IDENTITY,
+          })
+        );
+
+        router.push("/assets");
+      }
 
     } catch (error: unknown) {
       console.error("Verification error:", error);
       setVerificationResult(null);
+
+      let errorMessage = "Please ensure it's a valid VC file.";
       
-      const errorMessage = error instanceof Error ? error.message : "Please ensure it's a valid VC file.";
-      
+      // Check if it's a network error
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = "Unable to connect to the verification server. Please ensure the backend is running on port 5000.";
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
       showWarning(
         "Verification Error",
         `Unable to verify the document. ${errorMessage}`,
@@ -95,7 +106,7 @@ export default function HomePage() {
   <div className="min-h-screen bg-gray-50">
     <Header onClose={() => {}} />
 
-    <DocumentUpload 
+    <DocumentUpload
       onFileUpload={handleFileUpload}
     />
 
