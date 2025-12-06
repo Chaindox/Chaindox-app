@@ -1,0 +1,650 @@
+// Invoice Form Config - Updated to match specific structure
+export const invoiceConfig = {
+  steps: [
+    {
+      id: "invoice-details",
+      title: "Invoice Information",
+      description: "Basic invoice details and dates",
+      fields: [
+        {
+          id: "invoice_number",
+          label: "Invoice Number",
+          type: "text",
+          required: true,
+          placeholder: "Auto-generated",
+          readonly: true,
+        },
+        {
+          id: "issue_date",
+          label: "Issue Date",
+          type: "date",
+          required: true,
+        },
+        {
+          id: "invoice_date",
+          label: "Invoice Date",
+          type: "date",
+          required: true,
+        },
+        {
+          id: "payment_due_date",
+          label: "Payment Due Date",
+          type: "date",
+          required: true,
+        },
+        {
+          id: "invoice_amount",
+          label: "Invoice Amount",
+          type: "number",
+          required: true,
+          placeholder: "0.00",
+        },
+      ],
+    },
+    {
+      id: "parties-info",
+      title: "Buyer & Seller Information",
+      description: "Details of buyer, invoicee, and seller",
+      fields: [
+        {
+          id: "buyer_name",
+          label: "Buyer Company Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter buyer company name",
+        },
+        {
+          id: "buyer_address",
+          label: "Buyer Address",
+          type: "textarea",
+          required: true,
+          placeholder: "Enter buyer address",
+          rows: 3,
+        },
+        {
+          id: "invoicee_name",
+          label: "Invoicee Company Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter invoicee company name",
+        },
+        {
+          id: "invoicee_address",
+          label: "Invoicee Address",
+          type: "textarea",
+          required: true,
+          placeholder: "Enter invoicee address",
+          rows: 3,
+        },
+        {
+          id: "seller_name",
+          label: "Seller Company Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter seller company name",
+        },
+        {
+          id: "seller_address",
+          label: "Seller Address",
+          type: "textarea",
+          required: true,
+          placeholder: "Enter seller address",
+          rows: 3,
+        },
+        {
+          id: "seller_tax_id",
+          label: "Seller Tax ID",
+          type: "text",
+          required: true,
+          placeholder: "Enter seller tax ID",
+        },
+      ],
+    },
+    {
+      id: "banking-details",
+      title: "Banking Information",
+      description: "Seller's banking details for payment",
+      fields: [
+        {
+          id: "sellers_bank_name",
+          label: "Seller's Bank Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter bank name",
+        },
+        {
+          id: "sellers_bank_swift_code",
+          label: "Bank SWIFT Code",
+          type: "text",
+          required: true,
+          placeholder: "Enter SWIFT code (e.g., BCOMSG2X)",
+          validation: {
+            pattern: "^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$",
+          },
+        },
+        {
+          id: "seller_bank_account",
+          label: "Seller Bank Account Number",
+          type: "text",
+          required: true,
+          placeholder: "Enter bank account number",
+          validation: {
+            minLength: 10,
+            maxLength: 30,
+          },
+        },
+      ],
+    },
+  ],
+}
+
+// Purchase Order Form Config
+export const purchaseOrderConfig = {
+  steps: [
+    {
+      id: "po-details",
+      title: "Purchase Order Details",
+      description: "Basic purchase order information",
+      fields: [
+        {
+          id: "poNumber",
+          label: "PO Number",
+          type: "text",
+          required: true,
+          placeholder: "Auto-generated",
+          readonly: true,
+        },
+        {
+          id: "poDate",
+          label: "PO Date",
+          type: "date",
+          required: true,
+        },
+        {
+          id: "expectedDelivery",
+          label: "Expected Delivery Date",
+          type: "date",
+          required: true,
+        },
+        {
+          id: "priority",
+          label: "Priority Level",
+          type: "select",
+          required: true,
+          options: [
+            { value: "low", label: "Low" },
+            { value: "medium", label: "Medium" },
+            { value: "high", label: "High" },
+            { value: "urgent", label: "Urgent" },
+          ],
+        },
+      ],
+    },
+    {
+      id: "vendor-info",
+      title: "Vendor Information",
+      description: "Supplier and buyer details",
+      fields: [
+        {
+          id: "vendorName",
+          label: "Vendor Company Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter vendor company name",
+        },
+        {
+          id: "vendorContact",
+          label: "Vendor Contact Person",
+          type: "text",
+          required: true,
+          placeholder: "Enter contact person name",
+        },
+        {
+          id: "vendorEmail",
+          label: "Vendor Email",
+          type: "email",
+          required: true,
+          placeholder: "Enter vendor email",
+        },
+        {
+          id: "deliveryAddress",
+          label: "Delivery Address",
+          type: "textarea",
+          required: true,
+          placeholder: "Enter complete delivery address",
+          rows: 3,
+        },
+      ],
+    },
+    {
+      id: "order-items",
+      title: "Order Items",
+      description: "Items being purchased",
+      fields: [
+        {
+          id: "productName",
+          label: "Product Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter product name",
+        },
+        {
+          id: "productCode",
+          label: "Product Code/SKU",
+          type: "text",
+          required: false,
+          placeholder: "Enter product code",
+        },
+        {
+          id: "orderQuantity",
+          label: "Order Quantity",
+          type: "number",
+          required: true,
+          placeholder: "0",
+        },
+        {
+          id: "unitCost",
+          label: "Unit Cost",
+          type: "number",
+          required: true,
+          placeholder: "0.00",
+        },
+        {
+          id: "specifications",
+          label: "Product Specifications",
+          type: "textarea",
+          required: false,
+          placeholder: "Enter any specific requirements",
+          rows: 3,
+        },
+      ],
+    },
+  ],
+}
+
+// Bill of Lading Form Config
+export const billOfLadingConfig = {
+  steps: [
+    {
+      id: "bol-details",
+      title: "Bill of Lading Details",
+      description: "Shipping document information",
+      fields: [
+        {
+          id: "bolNumber",
+          label: "BOL Number",
+          type: "text",
+          required: true,
+          placeholder: "Auto-generated",
+          readonly: true,
+        },
+        {
+          id: "shipmentDate",
+          label: "Shipment Date",
+          type: "date",
+          required: true,
+        },
+        {
+          id: "vesselName",
+          label: "Vessel/Vehicle Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter vessel or vehicle name",
+        },
+        {
+          id: "voyageNumber",
+          label: "Voyage/Trip Number",
+          type: "text",
+          required: false,
+          placeholder: "Enter voyage or trip number",
+        },
+      ],
+    },
+    {
+      id: "shipping-parties",
+      title: "Shipping Parties",
+      description: "Shipper, consignee, and carrier details",
+      fields: [
+        {
+          id: "shipperName",
+          label: "Shipper Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter shipper company name",
+        },
+        {
+          id: "shipperAddress",
+          label: "Shipper Address",
+          type: "textarea",
+          required: true,
+          placeholder: "Enter shipper address",
+          rows: 3,
+        },
+        {
+          id: "consigneeName",
+          label: "Consignee Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter consignee company name",
+        },
+        {
+          id: "consigneeAddress",
+          label: "Consignee Address",
+          type: "textarea",
+          required: true,
+          placeholder: "Enter consignee address",
+          rows: 3,
+        },
+      ],
+    },
+    {
+      id: "cargo-details",
+      title: "Cargo Information",
+      description: "Details about the shipped cargo",
+      fields: [
+        {
+          id: "cargoDescription",
+          label: "Cargo Description",
+          type: "textarea",
+          required: true,
+          placeholder: "Detailed description of cargo",
+          rows: 3,
+        },
+        {
+          id: "packageCount",
+          label: "Number of Packages",
+          type: "number",
+          required: true,
+          placeholder: "0",
+        },
+        {
+          id: "grossWeight",
+          label: "Gross Weight (kg)",
+          type: "number",
+          required: true,
+          placeholder: "0.00",
+        },
+        {
+          id: "portOfLoading",
+          label: "Port of Loading",
+          type: "text",
+          required: true,
+          placeholder: "Enter port of loading",
+        },
+        {
+          id: "portOfDischarge",
+          label: "Port of Discharge",
+          type: "text",
+          required: true,
+          placeholder: "Enter port of discharge",
+        },
+      ],
+    },
+  ],
+}
+
+// Packing List Form Config
+export const packingListConfig = {
+  steps: [
+    {
+      id: "packing-details",
+      title: "Packing List Details",
+      description: "Basic packing list information",
+      fields: [
+        {
+          id: "packingListNumber",
+          label: "Packing List Number",
+          type: "text",
+          required: true,
+          placeholder: "Auto-generated",
+          readonly: true,
+        },
+        {
+          id: "packingDate",
+          label: "Packing Date",
+          type: "date",
+          required: true,
+        },
+        {
+          id: "shipmentReference",
+          label: "Shipment Reference",
+          type: "text",
+          required: false,
+          placeholder: "Enter shipment reference",
+        },
+        {
+          id: "totalPackages",
+          label: "Total Number of Packages",
+          type: "number",
+          required: true,
+          placeholder: "0",
+        },
+      ],
+    },
+    {
+      id: "packing-parties",
+      title: "Packing Information",
+      description: "Packer and recipient details",
+      fields: [
+        {
+          id: "packerName",
+          label: "Packer Company Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter packer company name",
+        },
+        {
+          id: "packerAddress",
+          label: "Packer Address",
+          type: "textarea",
+          required: true,
+          placeholder: "Enter packer address",
+          rows: 3,
+        },
+        {
+          id: "recipientName",
+          label: "Recipient Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter recipient name",
+        },
+        {
+          id: "recipientAddress",
+          label: "Recipient Address",
+          type: "textarea",
+          required: true,
+          placeholder: "Enter recipient address",
+          rows: 3,
+        },
+      ],
+    },
+    {
+      id: "package-contents",
+      title: "Package Contents",
+      description: "Detailed contents of packages",
+      fields: [
+        {
+          id: "itemsList",
+          label: "Items List",
+          type: "textarea",
+          required: true,
+          placeholder: "List all items with quantities",
+          rows: 4,
+        },
+        {
+          id: "netWeight",
+          label: "Net Weight (kg)",
+          type: "number",
+          required: true,
+          placeholder: "0.00",
+        },
+        {
+          id: "grossWeight",
+          label: "Gross Weight (kg)",
+          type: "number",
+          required: true,
+          placeholder: "0.00",
+        },
+        {
+          id: "dimensions",
+          label: "Package Dimensions (L×W×H cm)",
+          type: "text",
+          required: true,
+          placeholder: "100×50×30",
+        },
+        {
+          id: "specialHandling",
+          label: "Special Handling Instructions",
+          type: "textarea",
+          required: false,
+          placeholder: "Any special handling requirements",
+          rows: 2,
+        },
+      ],
+    },
+  ],
+}
+
+// Certificate of Origin Form Config
+export const certificateOfOriginConfig = {
+  steps: [
+    {
+      id: "certificate-details",
+      title: "Certificate Details",
+      description: "Certificate of origin information",
+      fields: [
+        {
+          id: "certificateNumber",
+          label: "Certificate Number",
+          type: "text",
+          required: true,
+          placeholder: "Auto-generated",
+          readonly: true,
+        },
+        {
+          id: "issueDate",
+          label: "Issue Date",
+          type: "date",
+          required: true,
+        },
+        {
+          id: "countryOfOrigin",
+          label: "Country of Origin",
+          type: "select",
+          required: true,
+          options: [
+            { value: "US", label: "United States" },
+            { value: "CN", label: "China" },
+            { value: "DE", label: "Germany" },
+            { value: "JP", label: "Japan" },
+            { value: "SG", label: "Singapore" },
+            { value: "MY", label: "Malaysia" },
+            { value: "TH", label: "Thailand" },
+            { value: "VN", label: "Vietnam" },
+          ],
+        },
+        {
+          id: "issuingAuthority",
+          label: "Issuing Authority",
+          type: "text",
+          required: true,
+          placeholder: "Enter issuing authority name",
+        },
+      ],
+    },
+    {
+      id: "exporter-importer",
+      title: "Exporter & Importer",
+      description: "Exporter and importer information",
+      fields: [
+        {
+          id: "exporterName",
+          label: "Exporter Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter exporter company name",
+        },
+        {
+          id: "exporterAddress",
+          label: "Exporter Address",
+          type: "textarea",
+          required: true,
+          placeholder: "Enter exporter address",
+          rows: 3,
+        },
+        {
+          id: "importerName",
+          label: "Importer Name",
+          type: "text",
+          required: true,
+          placeholder: "Enter importer company name",
+        },
+        {
+          id: "importerAddress",
+          label: "Importer Address",
+          type: "textarea",
+          required: true,
+          placeholder: "Enter importer address",
+          rows: 3,
+        },
+      ],
+    },
+    {
+      id: "goods-details",
+      title: "Goods Information",
+      description: "Details of goods being certified",
+      fields: [
+        {
+          id: "goodsDescription",
+          label: "Description of Goods",
+          type: "textarea",
+          required: true,
+          placeholder: "Detailed description of goods",
+          rows: 3,
+        },
+        {
+          id: "hsCode",
+          label: "HS Code",
+          type: "text",
+          required: true,
+          placeholder: "Enter HS classification code",
+        },
+        {
+          id: "manufacturingProcess",
+          label: "Manufacturing Process",
+          type: "textarea",
+          required: false,
+          placeholder: "Describe manufacturing process if applicable",
+          rows: 2,
+        },
+        {
+          id: "originCriteria",
+          label: "Origin Criteria",
+          type: "select",
+          required: true,
+          options: [
+            { value: "wholly-obtained", label: "Wholly Obtained" },
+            { value: "substantially-transformed", label: "Substantially Transformed" },
+            { value: "regional-value-content", label: "Regional Value Content" },
+          ],
+        },
+        {
+          id: "declarationStatement",
+          label: "Declaration Statement",
+          type: "textarea",
+          required: true,
+          placeholder: "I hereby declare that the information is true and correct",
+          rows: 2,
+        },
+      ],
+    },
+  ],
+}
+
+export const formConfigs = {
+  invoice: invoiceConfig,
+  "purchase-order": purchaseOrderConfig,
+  "bill-of-lading": billOfLadingConfig,
+  "packing-list": packingListConfig,
+  "certificate-of-origin": certificateOfOriginConfig,
+}

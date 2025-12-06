@@ -34,33 +34,21 @@ export default function SuccessPage() {
     router.push("/")
   }
 
-  const handleDownloadJson = async () => {
-    if (!documentData) return
-
-    // Get filename based on document type
-    const getFileName = (docType) => {
-      const typeMap = {
-        "Bill of Lading": "wrapped-Bill-of-Landing.json",
-        "Invoice": "wrapped-Invoice.json",
-        "Purchase Order": "wrapped-purchase-order.json"
-      }
-
-      return typeMap[docType] || `wrapped-${docType.toLowerCase().replace(/\s+/g, '-')}.json`
+  const handleDownloadJson = () => {
+    if (!documentData || !documentData.signedDocument) {
+      alert('No document data available to download.')
+      return
     }
 
     try {
-      const fileName = getFileName(documentData.documentType.name)
+      // Use the actual signed W3C document from the backend
+      const jsonData = documentData.signedDocument
 
-      // Fetch the JSON file from config/jsons directory
-      const response = await fetch(`/config/jsons/${fileName}`)
+      // Generate filename based on document type and number
+      const docTypeName = documentData.documentType.name.toLowerCase().replace(/\s+/g, '-')
+      const fileName = `${docTypeName}-${documentData.documentNumber}.json`
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${fileName}`)
-      }
-
-      const jsonData = await response.json()
-
-      // Create and download JSON file
+      // Create and download JSON file with the actual document data
       const dataStr = JSON.stringify(jsonData, null, 2)
       const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr)
 
@@ -68,6 +56,8 @@ export default function SuccessPage() {
       linkElement.setAttribute("href", dataUri)
       linkElement.setAttribute("download", fileName)
       linkElement.click()
+      
+      console.log('Downloaded document:', fileName)
     } catch (error) {
       console.error('Error downloading JSON file:', error)
       alert('Failed to download JSON file. Please try again.')
@@ -126,6 +116,22 @@ export default function SuccessPage() {
               <span className="text-sm text-gray-600">Version</span>
               <span className="text-sm font-medium text-gray-900">{documentData.version}</span>
             </div>
+            {documentData.transactionHash && (
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-sm text-gray-600">Transaction Hash</span>
+                <span className="text-xs font-mono text-gray-900 truncate max-w-[200px]" title={documentData.transactionHash}>
+                  {documentData.transactionHash}
+                </span>
+              </div>
+            )}
+            {documentData.tokenId && (
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-sm text-gray-600">Token ID</span>
+                <span className="text-xs font-mono text-gray-900 truncate max-w-[200px]" title={documentData.tokenId}>
+                  {documentData.tokenId}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between items-center py-2">
               <span className="text-sm text-gray-600">Status</span>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 capitalize">

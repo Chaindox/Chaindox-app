@@ -20,10 +20,12 @@ export function FormField({ field, value, onChange }) {
     case "tel":
     case "number":
       return (
-        <div>
-          <Label htmlFor={field.id}>
-            {field.label} {field.required && <span className="text-red-500">*</span>}
-            {field.readonly && <Lock className="inline w-3 h-3 ml-1 text-gray-400" />}
+        <div className="space-y-2">
+          <Label htmlFor={field.id} className="text-sm font-semibold text-gray-700 flex items-center">
+            {field.label} 
+            {field.required && <span className="text-red-500 ml-1">*</span>}
+            {field.readonly && <Lock className="inline w-3 h-3 ml-2 text-gray-400" />}
+            {field.computed && <span className="ml-2 text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Auto</span>}
           </Label>
           <Input
             id={field.id}
@@ -33,16 +35,20 @@ export function FormField({ field, value, onChange }) {
             required={field.required}
             placeholder={field.placeholder}
             readOnly={field.readonly}
-            className={cn("mt-1", field.readonly && "bg-gray-50 text-gray-600 cursor-not-allowed border-gray-200")}
+            className={cn(
+              "transition-all duration-200 border-gray-300 focus:border-red-500 focus:ring-red-500",
+              field.readonly && "bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 cursor-not-allowed border-gray-200 font-semibold"
+            )}
           />
         </div>
       )
 
     case "textarea":
       return (
-        <div>
-          <Label htmlFor={field.id}>
-            {field.label} {field.required && <span className="text-red-500">*</span>}
+        <div className="space-y-2">
+          <Label htmlFor={field.id} className="text-sm font-semibold text-gray-700 flex items-center">
+            {field.label} 
+            {field.required && <span className="text-red-500 ml-1">*</span>}
           </Label>
           <Textarea
             id={field.id}
@@ -51,19 +57,20 @@ export function FormField({ field, value, onChange }) {
             required={field.required}
             placeholder={field.placeholder}
             rows={field.rows || 3}
-            className="mt-1"
+            className="transition-all duration-200 border-gray-300 focus:border-red-500 focus:ring-red-500 resize-none"
           />
         </div>
       )
 
     case "select":
       return (
-        <div>
-          <Label htmlFor={field.id}>
-            {field.label} {field.required && <span className="text-red-500">*</span>}
+        <div className="space-y-2">
+          <Label htmlFor={field.id} className="text-sm font-semibold text-gray-700 flex items-center">
+            {field.label} 
+            {field.required && <span className="text-red-500 ml-1">*</span>}
           </Label>
           <Select value={value || ""} onValueChange={onChange}>
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="border-gray-300 focus:border-red-500 focus:ring-red-500">
               <SelectValue placeholder={field.placeholder} />
             </SelectTrigger>
             <SelectContent>
@@ -79,15 +86,19 @@ export function FormField({ field, value, onChange }) {
 
     case "date":
       return (
-        <div>
-          <Label htmlFor={field.id}>
-            {field.label} {field.required && <span className="text-red-500">*</span>}
+        <div className="space-y-2">
+          <Label htmlFor={field.id} className="text-sm font-semibold text-gray-700 flex items-center">
+            {field.label} 
+            {field.required && <span className="text-red-500 ml-1">*</span>}
           </Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={cn("w-full mt-1 justify-start text-left font-normal", !value && "text-muted-foreground")}
+                className={cn(
+                  "w-full justify-start text-left font-normal border-gray-300 hover:bg-gray-50 transition-all duration-200",
+                  !value && "text-muted-foreground"
+                )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {value ? format(new Date(value), "PPP") : "Pick a date"}

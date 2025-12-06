@@ -6,13 +6,31 @@ export function FormStepper({ steps, currentStep, completedSteps }) {
     <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
       <div className="max-w-4xl mx-auto">
         {/* Desktop Stepper */}
-        <div className="hidden md:flex items-center justify-between">
-          {steps.map((step, index) => (
-            <div key={step.id} className="flex items-center">
-              <div className="flex items-center">
+        <div className="hidden md:block">
+          <div className="flex items-center justify-between relative">
+            {steps.map((step, index) => (
+              <div key={step.id} className="flex flex-col items-center relative" style={{ flex: '1' }}>
+                {/* Connecting Line */}
+                {index < steps.length - 1 && (
+                  <div 
+                    className={cn(
+                      "absolute top-5 h-0.5 transition-all duration-200 z-0",
+                      index < currentStep || completedSteps.has(index)
+                        ? "bg-red-600"
+                        : "bg-gray-300"
+                    )}
+                    style={{
+                      left: '50%',
+                      right: '-50%',
+                      width: 'calc(100% + 0px)',
+                    }}
+                  />
+                )}
+
+                {/* Circle */}
                 <div
                   className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+                    "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 shadow-sm relative z-10",
                     index < currentStep || completedSteps.has(index)
                       ? "bg-red-600 text-white"
                       : index === currentStep
@@ -20,17 +38,23 @@ export function FormStepper({ steps, currentStep, completedSteps }) {
                         : "bg-gray-200 text-gray-500",
                   )}
                 >
-                  {completedSteps.has(index) ? <Check className="w-4 h-4" /> : index + 1}
+                  {completedSteps.has(index) ? <Check className="w-5 h-5" /> : index + 1}
                 </div>
-                <div className="ml-3">
-                  <p className={cn("text-sm font-medium", index === currentStep ? "text-red-600" : "text-gray-500")}>
+                
+                {/* Step Title */}
+                <div className="mt-3 text-center px-2">
+                  <p className={cn(
+                    "text-xs font-medium leading-tight",
+                    index === currentStep ? "text-red-600" : 
+                    index < currentStep || completedSteps.has(index) ? "text-gray-700" : 
+                    "text-gray-500"
+                  )}>
                     {step.title}
                   </p>
                 </div>
               </div>
-              {index < steps.length - 1 && <div className="flex-1 h-px bg-gray-300 mx-4" />}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Mobile Stepper */}

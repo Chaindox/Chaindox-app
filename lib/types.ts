@@ -91,7 +91,7 @@ export interface CreateDocumentResponse {
   signedW3CDocument: any;
 }
 
-export type DocumentId = 'ElectronicPromissoryNote' | 'WarehouseReceipt' | 'BillOfLading' | 'Invoice' | 'CertificateOfOrigin';
+export type DocumentId = 'ELECTRONIC_PROMISSORY_NOTE' | 'WAREHOUSE_RECEIPT' | 'BILL_OF_LADING' | 'INVOICE' | 'CERTIFICATE_OF_ORIGIN' | 'SAMPLE';
 
 export interface CreateDocumentResult {
   success: boolean;
@@ -103,7 +103,7 @@ export interface CreateDocumentResult {
 // Document Contexts
 // =============================================================================
 
-export type CredentialSubject = ElectronicPromissoryNote | WarehouseReceipt | BillOfLading | Invoice;
+export type CredentialSubject = ElectronicPromissoryNote | WarehouseReceipt | BillOfLading | Invoice | Record<string, any>;
 
 export interface ElectronicPromissoryNote {
   epnId?: string;

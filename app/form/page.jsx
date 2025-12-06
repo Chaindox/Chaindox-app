@@ -9,6 +9,7 @@ import { FormStepper } from "@/components/FormStepper"
 import { FormField } from "@/components/FormField"
 import { WarningPopup } from "@/components/WarningPopup"
 import { formConfigs } from "@/config/formConfigs"
+import { createDocument } from "@/app/api/verify"
 
 export default function FormPage() {
   const router = useRouter()
@@ -19,6 +20,7 @@ export default function FormPage() {
   const [documentNumber, setDocumentNumber] = useState("")
   const [formConfig, setFormConfig] = useState(null)
   const [warningPopup, setWarningPopup] = useState({ isOpen: false, title: "", message: "", type: "warning" })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const showWarning = (title, message, type = "warning") => {
     setWarningPopup({ isOpen: true, title, message, type })
@@ -39,18 +41,18 @@ export default function FormPage() {
       setDocumentNumber(docNumber)
       setFormConfig(formConfigs[docType.id])
 
-      // Pre-fill document number in form data based on document type
-      const numberFieldMap = {
-        invoice: "invoice_number",
-        "purchase-order": "poNumber",
-        "bill-of-lading": "bolNumber",
-        "packing-list": "packingListNumber",
-        "certificate-of-origin": "certificateNumber",
+      // Pre-fill document ID fields in form data based on document type
+      const idFieldMap = {
+        "electronic-promissory-note": "epnId",
+        "warehouse-receipt": "wrId",
+        "bill-of-lading": "bolId",
+        "invoice": "invoiceId",
+        "certificate-of-origin": "cooId",
       }
 
-      const numberField = numberFieldMap[docType.id]
-      if (numberField) {
-        setFormData((prev) => ({ ...prev, [numberField]: docNumber }))
+      const idField = idFieldMap[docType.id]
+      if (idField) {
+        setFormData((prev) => ({ ...prev, [idField]: docNumber }))
       }
     } else {
       // If no document type selected, redirect to home
@@ -77,6 +79,68 @@ export default function FormPage() {
 
   const updateFormData = (field, value) => {
     const newFormData = { ...formData, [field]: value }
+    
+    // Auto-calculate invoice fields
+    if (selectedDocumentType?.id === "invoice") {
+      // Calculate amount from quantity and rate
+      if (field === "billableItemsQuantity" || field === "billableItemsRate") {
+        const quantity = field === "billableItemsQuantity" ? value : (newFormData.billableItemsQuantity || 0)
+        const rate = field === "billableItemsRate" ? value : (newFormData.billableItemsRate || 0)
+        newFormData.billableItemsAmount = Number(quantity) * Number(rate)
+      }
+      
+      // Calculate subtotal from amount
+      if (field === "billableItemsAmount" || field === "billableItemsQuantity" || field === "billableItemsRate") {
+        newFormData.subtotal = newFormData.billableItemsAmount || 0
+      }
+      
+      // Calculate tax total when tax rate or subtotal changes
+      if (field === "tax" || field === "subtotal" || field === "billableItemsAmount" || field === "billableItemsQuantity" || field === "billableItemsRate") {
+        const subtotal = newFormData.subtotal || 0
+        const taxRate = field === "tax" ? value : (newFormData.tax || 0)
+        newFormData.taxTotal = (Number(subtotal) * Number(taxRate)) / 100
+      }
+      
+      // Calculate total (subtotal + taxTotal)
+      if (field === "tax" || field === "subtotal" || field === "billableItemsAmount" || field === "billableItemsQuantity" || field === "billableItemsRate") {
+        const subtotal = newFormData.subtotal || 0
+        const taxTotal = newFormData.taxTotal || 0
+        newFormData.total = Number(subtotal) + Number(taxTotal)
+      }
+    }
+    
+    // Auto-calculate Electronic Promissory Note fields
+    if (selectedDocumentType?.id === "electronic-promissory-note") {
+      // Calculate total amount payable (principal + interest)
+      if (field === "principalAmount" || field === "interestRate") {
+        const principal = field === "principalAmount" ? Number(value) : Number(newFormData.principalAmount || 0)
+        const interestRate = field === "interestRate" ? Number(value) : Number(newFormData.interestRate || 0)
+        const interestAmount = (principal * interestRate) / 100
+        newFormData.totalAmountPayable = principal + interestAmount
+      }
+    }
+    
+    // Auto-calculate Warehouse Receipt fields
+    if (selectedDocumentType?.id === "warehouse-receipt") {
+      // Calculate total charges
+      if (field === "storageCharges" || field === "handlingCharges" || field === "otherCharges") {
+        const storage = Number(newFormData.storageCharges || 0)
+        const handling = Number(newFormData.handlingCharges || 0)
+        const other = Number(newFormData.otherCharges || 0)
+        newFormData.totalCharges = storage + handling + other
+      }
+    }
+    
+    // Auto-calculate Bill of Lading fields
+    if (selectedDocumentType?.id === "bill-of-lading") {
+      // Calculate collect charges (freight - prepaid)
+      if (field === "freightCharges" || field === "prepaidAmount") {
+        const freight = Number(newFormData.freightCharges || 0)
+        const prepaid = Number(newFormData.prepaidAmount || 0)
+        newFormData.collectCharges = freight - prepaid
+      }
+    }
+    
     setFormData(newFormData)
     // Auto-save form data
     localStorage.setItem("formData", JSON.stringify(newFormData))
@@ -233,7 +297,42 @@ export default function FormPage() {
     }
   }
 
-  const handleSubmit = (event) => {
+  // Map document type IDs to DocumentId enum values
+  const getDocumentId = (docTypeId) => {
+    const documentIdMap = {
+      "electronic-promissory-note": "ELECTRONIC_PROMISSORY_NOTE",
+      "warehouse-receipt": "WAREHOUSE_RECEIPT",
+      "bill-of-lading": "BILL_OF_LADING",
+      "invoice": "INVOICE",
+      "certificate-of-origin": "CERTIFICATE_OF_ORIGIN",
+    }
+    return documentIdMap[docTypeId] || "SAMPLE"
+  }
+
+  // Transform form data to match the document interface structure
+  const transformToCredentialSubject = (formData, docTypeId) => {
+    // Create a clean object with the form data, excluding blockchain fields
+    const { owner, holder, remarks, ownerAddress, holderAddress, ...cleanFormData } = formData
+    const credentialSubject = { ...cleanFormData }
+    
+    // Add document-specific ID field if not present
+    const docIdField = {
+      "electronic-promissory-note": "epnId",
+      "warehouse-receipt": "wrId",
+      "bill-of-lading": "bolId",
+      "invoice": "invoiceId",
+      "certificate-of-origin": "cooId",
+    }
+    
+    const idField = docIdField[docTypeId]
+    if (idField && !credentialSubject[idField]) {
+      credentialSubject[idField] = documentNumber
+    }
+    
+    return credentialSubject
+  }
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
     // Validate final step before submission
@@ -247,29 +346,95 @@ export default function FormPage() {
       return
     }
 
-    // Transform data to OpenAttestation format
-    const openAttestationData = transformToOpenAttestationFormat(formData, selectedDocumentType, documentNumber)
+    setIsSubmitting(true)
 
-    // Create comprehensive document data for display
-    const documentData = {
-      documentType: selectedDocumentType,
-      documentNumber: documentNumber,
-      data: openAttestationData,
-      createdAt: new Date().toISOString(),
-      version: "1.0",
-      status: "completed",
+    try {
+      // Transform form data to credential subject
+      const credentialSubject = transformToCredentialSubject(formData, selectedDocumentType.id)
+
+      // Get the DocumentId enum value
+      const documentId = getDocumentId(selectedDocumentType.id)
+
+      // Get owner and holder from form data or use default valid addresses
+      // IMPORTANT: Zero addresses (0x0000...) will be rejected by the smart contract
+      const defaultAddress = "0x8e215d06ea7ec1fdb4fc5fd21768f4b34ee92ef4"
+      const ownerAddress = formData.ownerAddress || formData.owner || defaultAddress
+      const holderAddress = formData.holderAddress || formData.holder || defaultAddress
+
+      // Prepare the request payload with valid addresses
+      const payload = {
+        credentialSubject: credentialSubject,
+        owner: ownerAddress,
+        holder: holderAddress,
+        remarks: formData.remarks || `Created ${selectedDocumentType.name} - ${documentNumber}`,
+      }
+
+      console.log('Submitting document:', { documentId, payload })
+
+      // Call the API
+      const result = await createDocument(documentId, payload)
+
+      if (result.success && result.data) {
+        // Create comprehensive document data for display
+        const documentData = {
+          documentType: selectedDocumentType,
+          documentNumber: documentNumber,
+          formData: formData, // Store original form inputs
+          signedDocument: result.data.signedW3CDocument, // Store the signed W3C document
+          transactionHash: result.data.transactionHash,
+          tokenId: result.data.tokenId,
+          createdAt: new Date().toISOString(),
+          version: "1.0",
+          status: "completed",
+        }
+
+        console.log('Document created successfully:', documentData)
+
+        // Store final document data for success page
+        localStorage.setItem("completedDocument", JSON.stringify(documentData))
+
+        // Clear form progress
+        localStorage.removeItem("currentStep")
+        localStorage.removeItem("completedSteps")
+        localStorage.removeItem("formData")
+
+        // Navigate to success page
+        router.push("/success")
+      } else {
+        // Show error with more details
+        console.error('Document creation failed:', result)
+        const errorMessage = result.error || "An error occurred while creating the document. Please try again."
+        
+        // Extract user-friendly message
+        let displayMessage = errorMessage
+        if (errorMessage.includes('not supported')) {
+          displayMessage = `Document type is not supported by the backend. Please contact support.`
+        } else if (errorMessage.includes('required')) {
+          displayMessage = `Missing required fields. ${errorMessage}`
+        } else if (errorMessage.includes('validation')) {
+          displayMessage = `Document validation failed. Please check your input data.`
+        } else if (errorMessage.includes('minting') || errorMessage.includes('blockchain')) {
+          displayMessage = `Blockchain transaction failed. Please check owner/holder addresses and try again.`
+        } else if (errorMessage.includes('configuration') || errorMessage.includes('Wallet')) {
+          displayMessage = `Server configuration error. Please contact administrator.`
+        }
+        
+        showWarning(
+          "Document Creation Failed",
+          displayMessage,
+          "error",
+        )
+        setIsSubmitting(false)
+      }
+    } catch (error) {
+      console.error("Error creating document:", error)
+      showWarning(
+        "Document Creation Failed",
+        `An unexpected error occurred: ${error.message}\n\nPlease ensure the backend server is running at http://localhost:5000`,
+        "error",
+      )
+      setIsSubmitting(false)
     }
-
-    // Store final document data for success page
-    localStorage.setItem("completedDocument", JSON.stringify(documentData))
-
-    // Clear form progress
-    localStorage.removeItem("currentStep")
-    localStorage.removeItem("completedSteps")
-    localStorage.removeItem("formData")
-
-    // Navigate to success page
-    router.push("/success")
   }
 
   const handleClose = () => {
@@ -327,32 +492,46 @@ export default function FormPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <Header onClose={handleClose} showCloseButton />
       <FormStepper steps={formConfig.steps} currentStep={currentStep} completedSteps={completedSteps} />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <div className="bg-white rounded-lg shadow-xl p-4 sm:p-8">
-          <div className="mb-6">
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="text-2xl">{selectedDocumentType.icon}</span>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-800">{currentStepConfig.title}</h1>
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+        {/* Document Info Header */}
+        <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-t-xl p-6 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="bg-white rounded-lg p-2 shadow-md">
+                <span className="text-3xl">{selectedDocumentType.icon}</span>
+              </div>
+              <div className="text-white">
+                <h2 className="text-sm font-medium opacity-90">Creating</h2>
+                <h1 className="text-2xl font-bold">{selectedDocumentType.name}</h1>
+              </div>
             </div>
-            <p className="text-gray-600 mb-4 text-sm sm:text-base">{currentStepConfig.description}</p>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0">
-              <p className="text-xs sm:text-sm text-gray-500">
-                Document Type: <span className="font-semibold text-red-600">{selectedDocumentType.name}</span>
-              </p>
-              <p className="text-xs sm:text-sm text-gray-500">
-                Document Number: <span className="font-semibold text-blue-600">{documentNumber}</span>
-              </p>
+            <div className="text-right">
+              <p className="text-sm text-white/80">Document Number</p>
+              <p className="text-lg font-mono font-semibold text-white">{documentNumber}</p>
             </div>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        {/* Form Content */}
+        <div className="bg-white rounded-b-xl shadow-xl border-t-2 border-orange-500">
+          {/* Step Title Section */}
+          <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-5 border-b border-gray-200">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{currentStepConfig.title}</h2>
+            <p className="text-gray-600 text-sm">{currentStepConfig.description}</p>
+          </div>
+
+          {/* Form Fields */}
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {gridFields.map(({ field, span }, index) => (
-                <div key={field.id} className={span === "full" ? "md:col-span-2" : ""}>
+                <div 
+                  key={field.id} 
+                  className={`${span === "full" ? "md:col-span-2" : ""} transition-all duration-200 hover:scale-[1.01]`}
+                >
                   <FormField
                     field={field}
                     value={formData[field.id]}
@@ -363,13 +542,13 @@ export default function FormPage() {
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex flex-col sm:flex-row justify-between pt-6 border-t space-y-4 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row justify-between pt-8 mt-8 border-t-2 border-gray-100 space-y-4 sm:space-y-0">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handlePrevious}
                 disabled={currentStep === 0}
-                className="w-full sm:w-auto bg-transparent"
+                className="w-full sm:w-auto bg-transparent hover:bg-gray-50 border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
               >
                 <ChevronLeft className="w-4 h-4 mr-2" />
                 Previous
@@ -380,24 +559,34 @@ export default function FormPage() {
                   type="button"
                   variant="outline"
                   onClick={handleClose}
-                  className="w-full sm:w-auto bg-transparent"
+                  className="w-full sm:w-auto bg-transparent hover:bg-red-50 border-red-300 text-red-600 hover:text-red-700 shadow-sm"
                 >
                   Cancel
                 </Button>
                 {isLastStep ? (
                   <Button
                     type="submit"
-                    className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 w-full sm:w-auto"
+                    disabled={isSubmitting}
+                    className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-200 px-8"
                   >
-                    Create {selectedDocumentType.name}
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Creating Document...
+                      </>
+                    ) : (
+                      <>
+                        <span>Create {selectedDocumentType.name}</span>
+                      </>
+                    )}
                   </Button>
                 ) : (
                   <Button
                     type="button"
                     onClick={handleNext}
-                    className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 w-full sm:w-auto"
+                    className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-200 px-8"
                   >
-                    Next
+                    Continue
                     <ChevronRight className="w-4 h-4 ml-2" />
                   </Button>
                 )}

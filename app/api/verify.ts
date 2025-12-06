@@ -45,10 +45,29 @@ export async function createDocument(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorMessage = `Server error (${response.status})`;
+      try {
+        const errorData = await response.json();
+        // Extract user-friendly error message
+        if (errorData.error) {
+          if (typeof errorData.error === 'string') {
+            errorMessage = errorData.error;
+          } else if (errorData.error.message) {
+            errorMessage = errorData.error.message;
+          } else if (errorData.error.details) {
+            errorMessage = errorData.error.details;
+          }
+        }
+      } catch (e) {
+        // If JSON parsing fails, try text
+        const errorText = await response.text();
+        if (errorText) {
+          errorMessage = errorText;
+        }
+      }
       return {
         success: false,
-        error: `HTTP error! status: ${response.status}, message: ${errorText}`,
+        error: errorMessage,
       };
     }
 
