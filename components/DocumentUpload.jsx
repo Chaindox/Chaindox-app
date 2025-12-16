@@ -72,7 +72,7 @@ export function DocumentUpload({ onFileUpload }) {
               id="file-upload"
               className="hidden"
               onChange={handleFileUpload}
-              accept=".pdf,.doc,.docx,.json"
+              accept=".pdf,.doc,.docx,.json,.tt"
             />
             <Button
               className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base w-full sm:w-auto"

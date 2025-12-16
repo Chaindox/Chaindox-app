@@ -14,6 +14,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useContract } from "@/hooks/useContract";
 import { useDocumentUpload } from "@/hooks/useDocumentUpload";
 import { WarningPopupState } from "@/lib/types";
+import { DocumentRenderer } from "@/components/DocumentRenderer";
 
 const AssetsPage: React.FC = () => {
   const router = useRouter();
@@ -362,6 +363,17 @@ const AssetsPage: React.FC = () => {
         {/* Endorsement Chain Section */}
         <EndorsementChain endorsementChain={contract.endorsementChain} />
       </div>
+
+      {contract.titleEscrowAddress && (
+        <div className="mb-6 animate-fade-in-up animation-delay-200">
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              Document preview
+            </h2>
+            <DocumentRenderer />
+          </Card>
+        </div>
+      )}
 
       {/* Warning Popup */}
       <WarningPopup
