@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { FileText, Upload } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-export function DocumentUpload({ onFileUpload }) {
+export function DocumentUpload({ onFileUpload, isLoading }) {
   const router = useRouter()
 
   const handleFileUpload = (event) => {
@@ -42,6 +42,15 @@ export function DocumentUpload({ onFileUpload }) {
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
+        {isLoading ? (
+          <div className="space-y-4 sm:space-y-6 py-8">
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-red-600"></div>
+            </div>
+            <p className="text-lg text-gray-700 font-medium">Verifying Document...</p>
+            <p className="text-sm text-gray-500">Please wait while we verify your document</p>
+          </div>
+        ) : (
         <div className="space-y-4 sm:space-y-6">
           {/* Document Icon */}
           <div className="flex justify-center">
@@ -93,6 +102,7 @@ export function DocumentUpload({ onFileUpload }) {
             </button>
           </div>
         </div>
+        )}
       </Card>
     </main>
   )

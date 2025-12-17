@@ -108,6 +108,7 @@ export default function HomePage() {
 
     <DocumentUpload
       onFileUpload={handleFileUpload}
+      isLoading={isLoading}
     />
 
     {showCookieNotice && <CookieNotice onClose={() => setShowCookieNotice(false)} />}
