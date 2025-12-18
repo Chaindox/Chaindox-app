@@ -68,6 +68,19 @@ export type VerifiedDocument =
   | OpenAttestationDocument
   | { signedW3CDocument: SignedVerifiableCredential };
 
+export interface OpenAttestationTemplate {
+  name: string;
+  type: string;
+  url: string;
+}
+
+export interface W3CRenderMethod {
+  type?: string;
+  template?: string;
+  url?: string;
+  [key: string]: any;
+}
+
 export interface VerificationResult {
   DOCUMENT_INTEGRITY: boolean;
   DOCUMENT_STATUS: boolean;

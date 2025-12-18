@@ -34,3 +34,9 @@ export const STORAGE_KEYS = {
   VERIFIED_DOCUMENT: "verifiedDocument",
   VERIFICATION_RESULT: "verificationResult",
 } as const;
+
+export const RENDERER_CONFIG = {
+  DEFAULT_URL: "http://localhost:5173/",
+  ENABLE_URL_EXTRACTION: true,
+  LOG_URL_EXTRACTION: process.env.NODE_ENV === "development",
+} as const;

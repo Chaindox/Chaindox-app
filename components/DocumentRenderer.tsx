@@ -6,6 +6,7 @@ import {
   HostActionsHandler,
   FrameActions,
 } from "@tradetrust-tt/decentralized-renderer-react-components";
+import { getRendererUrl } from "@/lib/rendererUtils";
 
 interface DocumentRendererProps {
   rendererUrl?: string;
@@ -19,16 +20,25 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
   const [document, setDocument] = useState<any>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string>("");
+  const [dynamicRendererUrl, setDynamicRendererUrl] = useState<string>(
+    rendererUrl || "http://localhost:5173/"
+  );
 
   // Load document from localStorage
   useEffect(() => {
     try {
       const savedDoc = localStorage.getItem("verifiedDocument");
-      
+
       if (savedDoc) {
         const parsedDoc = JSON.parse(savedDoc);
         setDocument(parsedDoc);
+
+        // Extract and set dynamic renderer URL
+        const extractedUrl = getRendererUrl(parsedDoc, rendererUrl);
+        setDynamicRendererUrl(extractedUrl);
+
         console.log("Document loaded from localStorage:", parsedDoc);
+        console.log("Renderer URL:", extractedUrl);
       } else {
         setError("No document found in localStorage");
       }
@@ -36,7 +46,7 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
       console.error("Error loading document:", err);
       setError("Failed to load document from localStorage");
     }
-  }, []);
+  }, [rendererUrl]);
 
   // Handle connection to renderer
   const handleConnected = useCallback((toFrameHandler: HostActionsHandler) => {
@@ -97,7 +107,7 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
     <div className="w-full">
       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-sm text-blue-800">
-          <span className="font-semibold">Renderer URL:</span> {rendererUrl}
+          <span className="font-semibold">Renderer URL:</span> {dynamicRendererUrl}
         </p>
         <p className="text-sm text-blue-800">
           <span className="font-semibold">Status:</span>{" "}
@@ -107,7 +117,7 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
 
       <div className="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
         <FrameConnector
-          source={rendererUrl}
+          source={dynamicRendererUrl}
           dispatch={handleDispatch}
           onConnected={handleConnected}
           className="w-full"
