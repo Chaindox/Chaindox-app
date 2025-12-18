@@ -1,4 +1,6 @@
 import { Signer } from "ethers";
+import { SignedVerifiableCredential, RawVerifiableCredential, WrappedDocument, OpenAttestationDocument } from "@trustvc/trustvc";
+
 
 export interface WarningPopupState {
   isOpen: boolean;
@@ -59,20 +61,12 @@ export interface ContractError {
   message: string;
 }
 
-export interface VerifiedDocument {
-  signedW3CDocument?: {
-    id: string;
-    credentialStatus: {
-      tokenRegistry: string;
-      tokenId: string;
-    };
-  };
-  id?: string;
-  credentialStatus?: {
-    tokenRegistry: string;
-    tokenId: string;
-  };
-}
+export type VerifiedDocument =
+  | SignedVerifiableCredential
+  | RawVerifiableCredential
+  | WrappedDocument<OpenAttestationDocument>
+  | OpenAttestationDocument
+  | { signedW3CDocument: SignedVerifiableCredential };
 
 export interface VerificationResult {
   DOCUMENT_INTEGRITY: boolean;
@@ -476,16 +470,16 @@ export interface CertificateOfOrigin {
   issueDateTime?: string;
   firstSignatoryAuthentication?: string;
   signature?: string;
-  
+
   // Supply Chain Consignment
   supplyChainConsignment?: string;
   supplyChainConsignmentId?: string;
   supplyChainConsignmentInformation?: string;
-  
+
   // Export Country
   exportCountry?: string;
   exportCountryCode?: string;
-  
+
   // Exporter Information (flattened)
   exporter?: string;
   exporterId?: string;
@@ -496,11 +490,11 @@ export interface CertificateOfOrigin {
   exporterPostcode?: string;
   exporterCountrySubDivisionName?: string;
   exporterCountryCode?: string;
-  
+
   // Import Country
   importCountry?: string;
   importCountryCode?: string;
-  
+
   // Importer Information (flattened)
   importer?: string;
   importerId?: string;
@@ -511,15 +505,15 @@ export interface CertificateOfOrigin {
   importerPostcode?: string;
   importerCountrySubDivisionName?: string;
   importerCountryCode?: string;
-  
+
   // Consignment Items
   includedConsignmentItems?: string;
-  
+
   // Loading Location
   loadingBaseportLocation?: string;
   loadingBaseportLocationId?: string;
   loadingBaseportLocationName?: string;
-  
+
   // Transport Movement
   mainCarriageTransportMovement?: string;
   mainCarriageTransportMovementId?: string;
@@ -527,7 +521,7 @@ export interface CertificateOfOrigin {
   usedTransportMeansName?: string;
   usedTransportMeansId?: string;
   departureDateTime?: string;
-  
+
   // Unloading Location
   unloadingBaseportLocation?: string;
   unloadingBaseportLocationId?: string;

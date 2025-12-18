@@ -5,7 +5,13 @@ import { ethers, providers, Signer } from "ethers";
 import {
   getTitleEscrowAddress,
   v5Contracts,
+  v4Contracts,
   fetchEndorsementChain,
+  getTokenRegistryAddress,
+  getTokenId,
+  isTransferableRecord,
+  isTitleEscrowVersion,
+  TitleEscrowInterface
 } from "@trustvc/trustvc";
 import { ContractState, ActionButton, VerifiedDocument } from "@/lib/types";
 import { CHAIN_CONFIG, ZERO_ADDRESS, STORAGE_KEYS } from "@/lib/constants";
@@ -32,65 +38,122 @@ export function useContract(account: string, signer: Signer | null) {
   // Load document from parsed VC data
   const loadDocument = async (parsedData: VerifiedDocument) => {
     try {
-      const vc = parsedData.signedW3CDocument || parsedData;
-      console.log("1. Document VC:", { hasCredentialStatus: !!vc.credentialStatus });
+      // Unwrap if it's wrapped in signedW3CDocument
+      const vc = 'signedW3CDocument' in parsedData
+        ? parsedData.signedW3CDocument
+        : parsedData;
 
-      // Validate document structure
-      if (!vc.credentialStatus || !vc.credentialStatus.tokenRegistry || !vc.credentialStatus.tokenId) {
-        console.error("Invalid document structure:", vc);
+      console.log("1. Validating document type...");
+
+      // Check if it's a transferable record
+      if (!isTransferableRecord(vc as any)) {
         return {
           success: false,
-          error: "Invalid document: missing credentialStatus information. Please verify the document again.",
+          error: "Document is not a transferable record",
         };
       }
 
-      console.log("2. Initializing provider...");
+      console.log("2. Extracting token information...");
+
+      // Use utility functions instead of direct property access
+      const tokenRegistry = getTokenRegistryAddress(vc as any);
+      const tokenId = getTokenId(vc as any);
+
+      if (!tokenRegistry || !tokenId) {
+        console.error("Missing token information:", { tokenRegistry, tokenId });
+        return {
+          success: false,
+          error: "Invalid document: missing tokenRegistry or tokenId information.",
+        };
+      }
+
+      console.log("3. Token info extracted:", { tokenRegistry, tokenId: tokenId.substring(0, 10) + '...' });
+
+      console.log("4. Initializing provider...");
       const _provider = new providers.JsonRpcProvider(CHAIN_CONFIG.rpcUrl);
 
       if (!_provider) {
         throw new Error("Provider initialization failed");
       }
 
-      console.log("3. Getting title escrow address...");
+      console.log("5. Getting title escrow address...");
+      // tokenId from getTokenId() already includes '0x' prefix for W3C VC,
+      // but not for OA V2/V3, so we need to handle both cases
+      const formattedTokenId = tokenId.startsWith('0x') ? tokenId : '0x' + tokenId;
+
       const titleEscrowAddress = await getTitleEscrowAddress(
-        vc.credentialStatus.tokenRegistry,
-        "0x" + vc.credentialStatus.tokenId,
+        tokenRegistry,
+        formattedTokenId,
         _provider
       );
-      console.log("4. Title escrow address:", titleEscrowAddress);
+      console.log("6. Title escrow address:", titleEscrowAddress);
 
-      console.log("5. Creating contract instance...");
+      console.log("7. Detecting contract version...");
+      // Check if it's v4 or v5 contract
+      const isV5 = await isTitleEscrowVersion({
+        titleEscrowAddress,
+        versionInterface: TitleEscrowInterface.V5,
+        provider: _provider
+      });
+
+      console.log(`8. Contract is v${isV5 ? '5' : '4'} - Creating contract instance...`);
+      const contractAbi = isV5
+        ? v5Contracts.TitleEscrow__factory.abi
+        : v4Contracts.TitleEscrow__factory.abi;
+
       const contract = new ethers.Contract(
         titleEscrowAddress,
-        v5Contracts.TitleEscrow__factory.abi,
+        contractAbi,
         _provider
       );
 
-      console.log("6. Fetching contract state...");
-      const [holder, beneficiary, prevHolder, prevBeneficiary, nominee] = await Promise.all([
-        contract.holder(),
-        contract.beneficiary(),
-        contract.prevHolder(),
-        contract.prevBeneficiary(),
-        contract.nominee(),
-      ]);
+      console.log("9. Fetching contract state...");
+      // V4 contracts don't have prevHolder/prevBeneficiary methods
+      let holder, beneficiary, prevHolder, prevBeneficiary, nominee;
 
-      console.log("7. Fetching endorsement chain...");
+      if (isV5) {
+        [holder, beneficiary, prevHolder, prevBeneficiary, nominee] = await Promise.all([
+          contract.holder(),
+          contract.beneficiary(),
+          contract.prevHolder(),
+          contract.prevBeneficiary(),
+          contract.nominee(),
+        ]);
+      } else {
+        // V4 only has holder, beneficiary, and nominee
+        [holder, beneficiary, nominee] = await Promise.all([
+          contract.holder(),
+          contract.beneficiary(),
+          contract.nominee(),
+        ]);
+        prevHolder = ZERO_ADDRESS;
+        prevBeneficiary = ZERO_ADDRESS;
+      }
+
+      console.log("10. Fetching endorsement chain...");
       let _endorsementChain: any[] = [];
       try {
+
+        // Get document ID (different property names for different document types)
+        const documentId = (vc as any).id || (vc as any).data?.id
+
         _endorsementChain = await fetchEndorsementChain(
-          vc.credentialStatus.tokenRegistry,
-          "0x" + vc.credentialStatus.tokenId,
+          tokenRegistry,
+          formattedTokenId,
           _provider as any,
-          vc?.id
+          documentId
         );
-        console.log("8. Endorsement chain fetched successfully");
+        console.log("11. Endorsement chain fetched successfully");
       } catch (chainError: any) {
         console.warn("Failed to fetch endorsement chain (continuing without it):", chainError.message);
         console.warn("This is usually due to RPC provider block range limits. The document will still load.");
         // Continue without endorsement chain - it's not critical for document loading
       }
-      console.log("9. Contract state loaded successfully");
+      console.log("12. Contract state loaded successfully");
+
+      // Get document ID for encryption
+      const encryptionId = (vc as any).id || (vc as any).data?.id || '';
+
 
       setState({
         titleEscrowAddress,
@@ -99,7 +162,7 @@ export function useContract(account: string, signer: Signer | null) {
         prevHolder,
         prevBeneficiary,
         nominee,
-        encryptionId: vc.id!,
+        encryptionId,
         endorsementChain: _endorsementChain as any,
       });
 
@@ -117,6 +180,7 @@ export function useContract(account: string, signer: Signer | null) {
       };
     }
   };
+
 
   // Refresh contract state
   const refreshContractState = async () => {
@@ -150,6 +214,7 @@ export function useContract(account: string, signer: Signer | null) {
         prevBeneficiary: currentPrevBeneficiary,
       }));
 
+      /*
       // Refresh endorsement chain
       const savedDocument = localStorage.getItem(STORAGE_KEYS.VERIFIED_DOCUMENT);
       if (savedDocument) {
@@ -172,6 +237,7 @@ export function useContract(account: string, signer: Signer | null) {
           // Continue without updating endorsement chain
         }
       }
+      */
 
       return {
         holder: currentHolder,
@@ -258,7 +324,7 @@ export function useContract(account: string, signer: Signer | null) {
       } else if (action === "transferOwners") {
         const holderValidation = validateAddress(newHolder, "New Holder");
         const beneficiaryValidation = validateAddress(newBeneficiary, "New Beneficiary");
-        
+
         if (!holderValidation.isValid || !beneficiaryValidation.isValid) {
           return {
             success: false,
