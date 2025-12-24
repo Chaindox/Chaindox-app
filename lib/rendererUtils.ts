@@ -164,3 +164,45 @@ export function getRendererUrl(
 
   return defaultUrl;
 }
+
+/**
+ * Extracts the unwrapped data from OpenAttestation documents
+ * This is needed because renderers expect the unwrapped data, not the full wrapped document
+ *
+ * OpenAttestation v2 structure:
+ * {
+ *   "version": "https://schema.openattestation.com/2.0/schema.json",
+ *   "data": { ... },  // <- This is what the renderer needs
+ *   "signature": { ... }
+ * }
+ */
+export function getOpenAttestationData(wrappedDocument: any): any {
+  if (!wrappedDocument) {
+    return null;
+  }
+
+  // For W3C VC format - already unwrapped (no data wrapper)
+  if (wrappedDocument?.credentialSubject || wrappedDocument?.signedW3CDocument) {
+    return wrappedDocument;
+  }
+
+  // For OpenAttestation v2 - extract data field
+  // This is the most common case and the one causing the issue
+  if (wrappedDocument?.data && wrappedDocument?.signature) {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Unwrapping OpenAttestation v2 document data");
+    }
+    return wrappedDocument.data;
+  }
+
+  // For OpenAttestation v3 - return as-is (already unwrapped format)
+  if (wrappedDocument?.openAttestationMetadata) {
+    return wrappedDocument;
+  }
+
+  // Fallback - return document as-is
+  if (process.env.NODE_ENV === "development") {
+    console.log("Document format not recognized, returning as-is");
+  }
+  return wrappedDocument;
+}
