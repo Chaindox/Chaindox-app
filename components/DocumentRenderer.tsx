@@ -14,23 +14,41 @@ interface DocumentRendererProps {
 }
 
 export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
-  rendererUrl = "http://localhost:5173/",
+  rendererUrl = "http://localhost:3003/",
 }): React.ReactElement => {
-  const toFrame = useRef<HostActionsHandler | undefined>(undefined);  // Use useRef instead of useState for stable reference
+  const toFrame = useRef<HostActionsHandler | undefined>(undefined);
   const [height, setHeight] = useState(800);
   const [rawDocument, setRawDocument] = useState<any>(null); // Wrapped document
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string>("");
   const [rendererTimeout, setRendererTimeout] = useState(false);
   const [dynamicRendererUrl, setDynamicRendererUrl] = useState<string>(
-    rendererUrl || "http://localhost:5173/"
+    rendererUrl || "http://localhost:3003/"
   );
 
-  // Use useMemo for stable document reference (like tradetrust-website)
-  const document = useMemo(() =>
-    rawDocument ? getOpenAttestationData(rawDocument) : null,
-    [rawDocument]
-  );
+  // Use useMemo for stable document reference
+  const document = useMemo(() => {
+    if (!rawDocument) return null;
+    
+    const unwrapped = getOpenAttestationData(rawDocument);
+    
+    if (process.env.NODE_ENV === "development" && unwrapped) {
+      console.log("=== Document Unwrapping Result ===");
+      console.log("Template name (should be clean):", unwrapped?.$template?.name);
+      console.log("Template type:", unwrapped?.$template?.type);
+      console.log("Template URL:", unwrapped?.$template?.url);
+      
+      const templateName = unwrapped?.$template?.name;
+      if (templateName && templateName.includes(":string:")) {
+        console.error("❌ ERROR: Template name still has UUID encoding!");
+        console.error("   This will cause the renderer to fail.");
+      } else if (templateName) {
+        console.log("✅ Template name is properly unwrapped:", templateName);
+      }
+    }
+    
+    return unwrapped;
+  }, [rawDocument]);
 
   // Load document from localStorage
   useEffect(() => {
@@ -53,11 +71,11 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
         console.log("Document loaded from localStorage:", parsedDoc);
         console.log("Renderer URL:", extractedUrl);
 
-        // Log template information for debugging
+        // Log template information for debugging (still wrapped at this point)
         const templateName = parsedDoc?.data?.$template?.name;
         const templateType = parsedDoc?.data?.$template?.type;
         if (templateName || templateType) {
-          console.log("Template Info:", {
+          console.log("Wrapped Template Info:", {
             name: templateName,
             type: templateType,
           });
@@ -79,12 +97,22 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
     toFrame.current = toFrameHandler;
     setIsConnected(true);
 
-    // CRITICAL: Send document immediately upon connection (like tradetrust-website)
-    // This ensures the renderer receives the document before any other operations
+    // CRITICAL: Send UNWRAPPED document immediately upon connection
     if (document && rawDocument && toFrame.current) {
       console.log("Sending document immediately on connection...");
-      console.log("Unwrapped document:", document);
-      console.log("Wrapped rawDocument:", rawDocument);
+      console.log("Unwrapped document (sent to renderer):", document);
+      console.log("Wrapped rawDocument (for reference):", rawDocument);
+      
+      // Verify the template name is unwrapped before sending
+      const templateName = document?.$template?.name;
+      if (templateName) {
+        console.log("Sending template name to renderer:", templateName);
+        if (templateName.includes(":string:") || templateName.includes(":number:")) {
+          console.error("⚠️ WARNING: Template name appears to still be UUID-encoded!");
+        }
+      }
+      
+      // Send the properly unwrapped document to the renderer
       toFrame.current(renderDocument({ document, rawDocument }));
     }
   }, [document, rawDocument]);
@@ -95,11 +123,19 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
 
     if (action.type === "UPDATE_HEIGHT") {
       setHeight(action.payload);
+      console.log("Renderer height updated to:", action.payload);
     }
 
     if (action.type === "UPDATE_TEMPLATES") {
       console.log("Available templates from renderer:", action.payload);
       console.log("Number of templates:", Array.isArray(action.payload) ? action.payload.length : "Not an array");
+      
+      // Log the template names for debugging
+      if (Array.isArray(action.payload)) {
+        action.payload.forEach((template: any, index: number) => {
+          console.log(`Template ${index}:`, template.id || template.name || template);
+        });
+      }
     }
 
     if (action.type === "TIMEOUT") {
@@ -110,13 +146,13 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
   }, [dynamicRendererUrl]);
 
   // Re-render document when it changes (after initial connection)
-  // This is similar to tradetrust-website's approach
   useEffect(() => {
     if (toFrame.current && document && isConnected) {
       console.log("Re-rendering document due to change...");
-      toFrame.current(renderDocument({ document }));
+      console.log("Document template being rendered:", document?.$template?.name);
+      toFrame.current(renderDocument({ document, rawDocument }));
     }
-  }, [document, isConnected]);
+  }, [document, rawDocument, isConnected]);
 
   if (error) {
     return (
@@ -147,6 +183,9 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
             <span className="font-semibold">Renderer URL:</span> {dynamicRendererUrl}
+          </p>
+          <p className="text-sm text-blue-800">
+            <span className="font-semibold">Template:</span> {document?.$template?.name || "Unknown"}
           </p>
           <p className="text-sm text-blue-800">
             <span className="font-semibold">Status:</span>{" "}
@@ -185,11 +224,10 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
         <div className="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
           <FrameConnector
             source={dynamicRendererUrl}
-            dispatch={handleDispatch} 
+            dispatch={handleDispatch}
             onConnected={handleConnected}
             className="w-full"
             style={{ height: `${height}px`, minHeight: "400px" }}
-            useFallbackRenderer={true}
           />
         </div>
       )}

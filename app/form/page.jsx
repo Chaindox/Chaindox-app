@@ -331,7 +331,7 @@ export default function FormPage() {
         $template: {
           name: generateFieldWithUUID("main"),
           type: generateFieldWithUUID("EMBEDDED_RENDERER"),
-          url: generateFieldWithUUID("https://tutorial-renderer.openattestation.com"),
+          url: generateFieldWithUUID("http://decentralizedrenderer.netlify.app"),
         },
         recipient: {
           name: generateFieldWithUUID("ChainDox"),
