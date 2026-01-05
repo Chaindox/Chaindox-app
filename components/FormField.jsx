@@ -19,6 +19,7 @@ export function FormField({ field, value, onChange }) {
     case "email":
     case "tel":
     case "number":
+    case "datetime-local":
       return (
         <div className="space-y-2">
           <Label htmlFor={field.id} className="text-sm font-semibold text-gray-700 flex items-center">
