@@ -504,7 +504,7 @@ export default function FormPage() {
       console.error("Error creating document:", error)
       showWarning(
         "Document Creation Failed",
-        `An unexpected error occurred: ${error.message}\n\nPlease ensure the backend server is running at http://localhost:5000`,
+        `An unexpected error occurred: ${error.message}\n\nPlease ensure the backend server is running at https://decentralizedrenderer.netlify.app/`,
         "error",
       )
       setIsSubmitting(false)

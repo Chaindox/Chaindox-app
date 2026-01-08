@@ -14,7 +14,7 @@ interface DocumentRendererProps {
 }
 
 export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
-  rendererUrl = "http://localhost:3003/",
+  rendererUrl = "https://decentralizedrenderer.netlify.app/",
 }): React.ReactElement => {
   const toFrame = useRef<HostActionsHandler | undefined>(undefined);
   const [height, setHeight] = useState(800);
@@ -23,7 +23,7 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
   const [error, setError] = useState<string>("");
   const [rendererTimeout, setRendererTimeout] = useState(false);
   const [dynamicRendererUrl, setDynamicRendererUrl] = useState<string>(
-    rendererUrl || "http://localhost:3003/"
+    rendererUrl || "https://decentralizedrenderer.netlify.app/"
   );
 
   // Use useMemo for stable document reference

@@ -294,6 +294,7 @@ export interface WarehouseReceipt {
   paymentTerms?: string;
   paymentStatus?: string;
 
+  // bagian ini belum masuk form
   insuranceValue?: number;
   insuranceProvider?: string;
   insurancePolicyNumber?: string;

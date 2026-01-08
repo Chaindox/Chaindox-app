@@ -205,7 +205,7 @@ export function extractRendererUrl(document: any): string | null {
  */
 export function getRendererUrl(
   document: any,
-  defaultUrl: string = "http://localhost:5173/"
+  defaultUrl: string = "https://decentralizedrenderer.netlify.app/"
 ): string {
   const extractedUrl = extractRendererUrl(document);
 
