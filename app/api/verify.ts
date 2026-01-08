@@ -1,6 +1,6 @@
 import { DocumentId, CreateDocumentRequest, CreateDocumentResult, CreateDocumentResponse } from "@/lib/types";
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = 'http://localhost:5000';
 
 export interface VerificationResult {
   VALIDITY: boolean;
@@ -14,6 +14,7 @@ export async function verifyDocument(vc: any): Promise<VerificationResult> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': process.env.NEXT_PUBLIC_API_KEY || ''
     },
     body: JSON.stringify(vc),
   });
@@ -40,6 +41,7 @@ export async function createDocument(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': process.env.NEXT_PUBLIC_API_KEY || ''
       },
       body: JSON.stringify(payload),
     });
