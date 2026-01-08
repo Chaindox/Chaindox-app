@@ -1437,7 +1437,7 @@ export const invoiceConfig = {
 // Certificate of Origin Form Config
 export const certificateOfOriginConfig = {
   steps: [
-    blockchainFieldsStep,
+    blockchainFieldsStep, 
     {
       id: "coo-basic-details",
       title: "Certificate Details",
@@ -1473,10 +1473,11 @@ export const certificateOfOriginConfig = {
         },
       ],
     },
+    // UPDATED CONSIGNMENT STEP WITH ARRAY FIELD
     {
       id: "coo-consignment",
       title: "Supply Chain Consignment",
-      description: "Consignment information",
+      description: "Consignment and goods information",
       fields: [
         {
           id: "supplyChainConsignment",
@@ -1500,13 +1501,147 @@ export const certificateOfOriginConfig = {
           placeholder: "Enter consignment information",
           rows: 3,
         },
+        // NEW: Array field for consignment items
         {
           id: "includedConsignmentItems",
           label: "Included Consignment Items",
-          type: "textarea",
+          type: "array",
           required: false,
-          placeholder: "List consignment items",
-          rows: 3,
+          description: "Add all goods/products included in this consignment",
+          itemLabel: "Consignment Item",
+          itemLabelPlural: "consignment items",
+          itemFields: [
+            {
+              id: "description",
+              label: "Description of Goods",
+              type: "textarea",
+              required: true,
+              placeholder: "Detailed description of the goods",
+              rows: 2,
+            },
+            {
+              id: "hsCode",
+              label: "HS Code",
+              type: "text",
+              required: true,
+              placeholder: "e.g., 8471.30.0100",
+            },
+            {
+              id: "quantity",
+              label: "Quantity",
+              type: "number",
+              required: true,
+              placeholder: "0",
+            },
+            {
+              id: "quantityUnit",
+              label: "Unit of Measure",
+              type: "select",
+              required: false,
+              placeholder: "Select unit",
+              options: [
+                { value: "PCS", label: "Pieces (PCS)" },
+                { value: "KG", label: "Kilograms (KG)" },
+                { value: "LBS", label: "Pounds (LBS)" },
+                { value: "MT", label: "Metric Tons (MT)" },
+                { value: "CTN", label: "Cartons (CTN)" },
+                { value: "PLT", label: "Pallets (PLT)" },
+                { value: "SET", label: "Sets (SET)" },
+                { value: "UNIT", label: "Units (UNIT)" },
+              ],
+            },
+            {
+              id: "grossWeight",
+              label: "Gross Weight (kg)",
+              type: "number",
+              required: false,
+              placeholder: "0.00",
+            },
+            {
+              id: "netWeight",
+              label: "Net Weight (kg)",
+              type: "number",
+              required: false,
+              placeholder: "0.00",
+            },
+            {
+              id: "originCriteria",
+              label: "Origin Criteria",
+              type: "select",
+              required: false,
+              placeholder: "Select origin criteria",
+              options: [
+                { value: "WO", label: "Wholly Obtained (WO)" },
+                { value: "PE", label: "Produced Entirely (PE)" },
+                { value: "RVC", label: "Regional Value Content (RVC)" },
+                { value: "CTC", label: "Change in Tariff Classification (CTC)" },
+                { value: "SP", label: "Specific Process (SP)" },
+                { value: "DMI", label: "De Minimis (DMI)" },
+                { value: "ACU", label: "Accumulation (ACU)" },
+              ],
+            },
+            {
+              id: "countryOfOrigin",
+              label: "Country of Origin",
+              type: "text",
+              required: false,
+              placeholder: "e.g., Singapore",
+            },
+            {
+              id: "countryOfOriginCode",
+              label: "Country Code",
+              type: "text",
+              required: false,
+              placeholder: "e.g., SG",
+            },
+            {
+              id: "marksAndNumbers",
+              label: "Marks & Numbers",
+              type: "text",
+              required: false,
+              placeholder: "Shipping marks on packages",
+            },
+            {
+              id: "invoiceNumber",
+              label: "Invoice Number",
+              type: "text",
+              required: false,
+              placeholder: "Related invoice number",
+            },
+            {
+              id: "invoiceDate",
+              label: "Invoice Date",
+              type: "text",
+              required: false,
+              placeholder: "YYYY-MM-DD",
+            },
+            {
+              id: "value",
+              label: "FOB Value",
+              type: "number",
+              required: false,
+              placeholder: "0.00",
+            },
+            {
+              id: "currency",
+              label: "Currency",
+              type: "select",
+              required: false,
+              placeholder: "Select currency",
+              options: [
+                { value: "USD", label: "US Dollar (USD)" },
+                { value: "EUR", label: "Euro (EUR)" },
+                { value: "GBP", label: "British Pound (GBP)" },
+                { value: "SGD", label: "Singapore Dollar (SGD)" },
+                { value: "CNY", label: "Chinese Yuan (CNY)" },
+                { value: "JPY", label: "Japanese Yen (JPY)" },
+                { value: "AUD", label: "Australian Dollar (AUD)" },
+                { value: "MYR", label: "Malaysian Ringgit (MYR)" },
+                { value: "THB", label: "Thai Baht (THB)" },
+                { value: "IDR", label: "Indonesian Rupiah (IDR)" },
+              ],
+            },
+          ],
         },
       ],
     },
@@ -1784,7 +1919,7 @@ export const certificateOfOriginConfig = {
       ],
     },
   ],
-}
+};
 
 export const formConfigs = {
   "electronic-promissory-note": electronicPromissoryNoteConfig,

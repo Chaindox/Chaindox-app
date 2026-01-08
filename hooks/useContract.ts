@@ -43,7 +43,7 @@ export function useContract(account: string, signer: Signer | null) {
         ? parsedData.signedW3CDocument
         : parsedData;
 
-      console.log("1. Validating document type...");
+      
 
       // Check if it's a transferable record
       if (!isTransferableRecord(vc as any)) {
@@ -53,7 +53,7 @@ export function useContract(account: string, signer: Signer | null) {
         };
       }
 
-      console.log("2. Extracting token information...");
+      
 
       // Use utility functions instead of direct property access
       const tokenRegistry = getTokenRegistryAddress(vc as any);
@@ -67,16 +67,16 @@ export function useContract(account: string, signer: Signer | null) {
         };
       }
 
-      console.log("3. Token info extracted:", { tokenRegistry, tokenId: tokenId.substring(0, 10) + '...' });
+      
 
-      console.log("4. Initializing provider...");
+      
       const _provider = new providers.JsonRpcProvider(CHAIN_CONFIG.rpcUrl);
 
       if (!_provider) {
         throw new Error("Provider initialization failed");
       }
 
-      console.log("5. Getting title escrow address...");
+      
       // tokenId from getTokenId() already includes '0x' prefix for W3C VC,
       // but not for OA V2/V3, so we need to handle both cases
       const formattedTokenId = tokenId.startsWith('0x') ? tokenId : '0x' + tokenId;
@@ -86,9 +86,9 @@ export function useContract(account: string, signer: Signer | null) {
         formattedTokenId,
         _provider
       );
-      console.log("6. Title escrow address:", titleEscrowAddress);
+      
 
-      console.log("7. Detecting contract version...");
+      
       // Check if it's v4 or v5 contract
       const isV5 = await isTitleEscrowVersion({
         titleEscrowAddress,
@@ -96,7 +96,7 @@ export function useContract(account: string, signer: Signer | null) {
         provider: _provider
       });
 
-      console.log(`8. Contract is v${isV5 ? '5' : '4'} - Creating contract instance...`);
+      
       const contractAbi = isV5
         ? v5Contracts.TitleEscrow__factory.abi
         : v4Contracts.TitleEscrow__factory.abi;
@@ -107,7 +107,7 @@ export function useContract(account: string, signer: Signer | null) {
         _provider
       );
 
-      console.log("9. Fetching contract state...");
+      
       // V4 contracts don't have prevHolder/prevBeneficiary methods
       let holder, beneficiary, prevHolder, prevBeneficiary, nominee;
 
@@ -130,7 +130,7 @@ export function useContract(account: string, signer: Signer | null) {
         prevBeneficiary = ZERO_ADDRESS;
       }
 
-      console.log("10. Fetching endorsement chain...");
+      
       let _endorsementChain: any[] = [];
       try {
 
@@ -143,13 +143,13 @@ export function useContract(account: string, signer: Signer | null) {
           _provider as any,
           documentId
         );
-        console.log("11. Endorsement chain fetched successfully");
+        
       } catch (chainError: any) {
         console.warn("Failed to fetch endorsement chain (continuing without it):", chainError.message);
         console.warn("This is usually due to RPC provider block range limits. The document will still load.");
         // Continue without endorsement chain - it's not critical for document loading
       }
-      console.log("12. Contract state loaded successfully");
+      
 
       // Get document ID for encryption
       const encryptionId = (vc as any).id || (vc as any).data?.id || '';

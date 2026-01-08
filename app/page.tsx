@@ -65,7 +65,7 @@ export default function HomePage() {
       if (result.VALIDITY) {
         localStorage.setItem("verifiedDocument", fileContent);
 
-        console.log(result.DOCUMENT_INTEGRITY);
+        
 
         localStorage.setItem(
           "verificationResult",
