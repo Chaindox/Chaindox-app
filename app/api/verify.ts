@@ -1,6 +1,6 @@
 import { DocumentId, CreateDocumentRequest, CreateDocumentResult, CreateDocumentResponse } from "@/lib/types";
 
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = 'http://localhost:3001';
 
 export interface VerificationResult {
   VALIDITY: boolean;

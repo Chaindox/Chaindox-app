@@ -57,7 +57,7 @@ export default function SuccessPage() {
       linkElement.setAttribute("download", fileName)
       linkElement.click()
       
-      console.log('Downloaded document:', fileName)
+      
     } catch (error) {
       console.error('Error downloading JSON file:', error)
       alert('Failed to download JSON file. Please try again.')

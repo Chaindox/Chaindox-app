@@ -117,9 +117,6 @@ function extractW3CVCUrl(document: any): string | null {
     if (Array.isArray(renderMethod)) {
       for (const method of renderMethod) {
         if (method?.id && isValidHttpUrl(method.id)) {
-          if (process.env.NODE_ENV === "development") {
-            console.log("Found W3C VC renderer URL in renderMethod[].id:", method.id);
-          }
           return method.id;
         }
         if (method?.url && isValidHttpUrl(method.url)) {
@@ -169,9 +166,6 @@ export function extractRendererUrl(document: any): string | null {
   if (document?.renderMethod || document?.credentialSubject?.renderMethod || document?.signedW3CDocument?.renderMethod) {
     const w3cUrl = extractW3CVCUrl(document);
     if (w3cUrl) {
-      if (process.env.NODE_ENV === "development") {
-        console.log("Extracted W3C VC renderer URL:", w3cUrl);
-      }
       return w3cUrl;
     }
   }
@@ -179,9 +173,6 @@ export function extractRendererUrl(document: any): string | null {
   if (document?.data?.$template) {
     const oaV2Url = extractOpenAttestationV2Url(document);
     if (oaV2Url) {
-      if (process.env.NODE_ENV === "development") {
-        console.log("Extracted OpenAttestation v2 renderer URL:", oaV2Url);
-      }
       return oaV2Url;
     }
   }
@@ -189,9 +180,6 @@ export function extractRendererUrl(document: any): string | null {
   if (document?.openAttestationMetadata?.template) {
     const oaV3Url = extractOpenAttestationV3Url(document);
     if (oaV3Url) {
-      if (process.env.NODE_ENV === "development") {
-        console.log("Extracted OpenAttestation v3 renderer URL:", oaV3Url);
-      }
       return oaV3Url;
     }
   }
@@ -210,14 +198,7 @@ export function getRendererUrl(
   const extractedUrl = extractRendererUrl(document);
 
   if (extractedUrl) {
-    if (process.env.NODE_ENV === "development") {
-      console.log("Using extracted renderer URL:", extractedUrl);
-    }
     return extractedUrl;
-  }
-
-  if (process.env.NODE_ENV === "development") {
-    console.log("No renderer URL found in document, using default:", defaultUrl);
   }
 
   return defaultUrl;
@@ -318,25 +299,16 @@ export function getOpenAttestationData(wrappedDocument: any): any {
 
 
   if (isW3CVerifiableCredential(wrappedDocument) && !isOpenAttestationV2(wrappedDocument)) {
-    if (process.env.NODE_ENV === "development") {
-      console.log("W3C VC format detected - returning document as-is");
-    }
     return wrappedDocument;
   }
 
   // For OpenAttestation v3 - return as-is
   if (isOpenAttestationV3(wrappedDocument) && !isOpenAttestationV2(wrappedDocument)) {
-    if (process.env.NODE_ENV === "development") {
-      console.log("OpenAttestation v3 format detected - returning as-is");
-    }
     return wrappedDocument;
   }
 
   // For OpenAttestation v2 - extract and UNWRAP the data field
   if (isOpenAttestationV2(wrappedDocument)) {
-    if (process.env.NODE_ENV === "development") {
-      console.log("OpenAttestation v2 format detected - unwrapping UUID-encoded values");
-    }
     
     const wrappedData = wrappedDocument.data;
     if (!wrappedData) {
@@ -346,15 +318,8 @@ export function getOpenAttestationData(wrappedDocument: any): any {
 
     const unwrappedData = unwrapOpenAttestationV2Data(wrappedData);
     
-    if (process.env.NODE_ENV === "development") {
-      console.log("Unwrapped template name:", unwrappedData?.$template?.name);
-    }
-
     return unwrappedData;
   }
 
-  if (process.env.NODE_ENV === "development") {
-    console.log("Document format not recognized, returning as-is");
-  }
   return wrappedDocument;
 }

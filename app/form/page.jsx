@@ -443,7 +443,7 @@ export default function FormPage() {
         remarks: formData.remarks || `Created ${selectedDocumentType.name} - ${documentNumber}`,
       }
 
-      console.log('Submitting document:', { documentId, payload })
+      
 
       // Call the API
       const result = await createDocument(documentId, payload)
@@ -462,7 +462,7 @@ export default function FormPage() {
           status: "completed",
         }
 
-        console.log('Document created successfully:', documentData)
+        
 
         // Store final document data for success page
         localStorage.setItem("completedDocument", JSON.stringify(documentData))

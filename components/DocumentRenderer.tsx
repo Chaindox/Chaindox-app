@@ -33,17 +33,10 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
     const unwrapped = getOpenAttestationData(rawDocument);
     
     if (process.env.NODE_ENV === "development" && unwrapped) {
-      console.log("=== Document Unwrapping Result ===");
-      console.log("Template name (should be clean):", unwrapped?.$template?.name);
-      console.log("Template type:", unwrapped?.$template?.type);
-      console.log("Template URL:", unwrapped?.$template?.url);
-      
       const templateName = unwrapped?.$template?.name;
       if (templateName && templateName.includes(":string:")) {
         console.error("❌ ERROR: Template name still has UUID encoding!");
         console.error("   This will cause the renderer to fail.");
-      } else if (templateName) {
-        console.log("✅ Template name is properly unwrapped:", templateName);
       }
     }
     
@@ -68,18 +61,10 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
         // Reset timeout state when loading new document
         setRendererTimeout(false);
 
-        console.log("Document loaded from localStorage:", parsedDoc);
-        console.log("Renderer URL:", extractedUrl);
-
         // Log template information for debugging (still wrapped at this point)
         const templateName = parsedDoc?.data?.$template?.name;
         const templateType = parsedDoc?.data?.$template?.type;
-        if (templateName || templateType) {
-          console.log("Wrapped Template Info:", {
-            name: templateName,
-            type: templateType,
-          });
-        } else {
+        if (!templateName && !templateType) {
           console.warn("No template information found in document");
         }
       } else {
@@ -93,20 +78,15 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
 
   // Handle connection to renderer
   const handleConnected = useCallback((toFrameHandler: HostActionsHandler) => {
-    console.log("Connected to renderer!");
+    
     toFrame.current = toFrameHandler;
     setIsConnected(true);
 
     // CRITICAL: Send UNWRAPPED document immediately upon connection
     if (document && rawDocument && toFrame.current) {
-      console.log("Sending document immediately on connection...");
-      console.log("Unwrapped document (sent to renderer):", document);
-      console.log("Wrapped rawDocument (for reference):", rawDocument);
-      
       // Verify the template name is unwrapped before sending
       const templateName = document?.$template?.name;
       if (templateName) {
-        console.log("Sending template name to renderer:", templateName);
         if (templateName.includes(":string:") || templateName.includes(":number:")) {
           console.error("⚠️ WARNING: Template name appears to still be UUID-encoded!");
         }
@@ -119,21 +99,20 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
 
   // Handle messages from renderer
   const handleDispatch = useCallback((action: FrameActions): void => {
-    console.log("Received action from renderer:", action);
+    
 
     if (action.type === "UPDATE_HEIGHT") {
       setHeight(action.payload);
-      console.log("Renderer height updated to:", action.payload);
     }
 
     if (action.type === "UPDATE_TEMPLATES") {
-      console.log("Available templates from renderer:", action.payload);
-      console.log("Number of templates:", Array.isArray(action.payload) ? action.payload.length : "Not an array");
+      
       
       // Log the template names for debugging
       if (Array.isArray(action.payload)) {
-        action.payload.forEach((template: any, index: number) => {
-          console.log(`Template ${index}:`, template.id || template.name || template);
+        action.payload.forEach((template: any) => {
+          // intentionally no-op: template data available if needed for debugging
+          void template;
         });
       }
     }
@@ -148,8 +127,6 @@ export const DocumentRenderer: React.FC<DocumentRendererProps> = ({
   // Re-render document when it changes (after initial connection)
   useEffect(() => {
     if (toFrame.current && document && isConnected) {
-      console.log("Re-rendering document due to change...");
-      console.log("Document template being rendered:", document?.$template?.name);
       toFrame.current(renderDocument({ document, rawDocument }));
     }
   }, [document, rawDocument, isConnected]);
