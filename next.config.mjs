@@ -24,6 +24,14 @@ const nextConfig = {
       'canvas': false,
     };
 
+    // CRITICAL FIX: Use alias to completely prevent canvas resolution on client
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'canvas': false,
+      };
+    }
+
     return config;
   },
 }
