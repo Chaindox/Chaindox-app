@@ -34,3 +34,9 @@ export const STORAGE_KEYS = {
   VERIFIED_DOCUMENT: "verifiedDocument",
   VERIFICATION_RESULT: "verificationResult",
 } as const;
+
+export const RENDERER_CONFIG = {
+  DEFAULT_URL: "https://decentralizedrenderer.netlify.app/",
+  ENABLE_URL_EXTRACTION: true,
+  LOG_URL_EXTRACTION: process.env.NODE_ENV === "development",
+} as const;

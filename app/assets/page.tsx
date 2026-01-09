@@ -14,6 +14,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { useContract } from "@/hooks/useContract";
 import { useDocumentUpload } from "@/hooks/useDocumentUpload";
 import { WarningPopupState } from "@/lib/types";
+import { DocumentRenderer } from "@/components/DocumentRenderer";
 
 const AssetsPage: React.FC = () => {
   const router = useRouter();
@@ -40,21 +41,14 @@ const AssetsPage: React.FC = () => {
   // In app/assets/page.tsx - inside the useEffect
   useEffect(() => {
     const autoLoadDocument = async () => {
-      // DEBUG
-      console.log("Checking localStorage...");
       const savedDoc = localStorage.getItem("verifiedDocument");
       const savedResult = localStorage.getItem("verificationResult");
-      console.log("Saved document:", savedDoc ? "EXISTS" : "NOT FOUND");
-      console.log("Saved result:", savedResult ? "EXISTS" : "NOT FOUND");
 
       const loadResult = loadFromLocalStorage();
-      console.log("Load result:", loadResult);
 
       if (loadResult.success && loadResult.data) {
         setIsLoading(true);
-        console.log("Loading document into contract...");
         const contractLoadResult = await contract.loadDocument(loadResult.data);
-        console.log("Contract load result:", contractLoadResult);
 
         if (contractLoadResult.error) {
           console.error("Contract load error:", contractLoadResult.error);
@@ -362,6 +356,17 @@ const AssetsPage: React.FC = () => {
         {/* Endorsement Chain Section */}
         <EndorsementChain endorsementChain={contract.endorsementChain} />
       </div>
+
+      {contract.titleEscrowAddress && (
+        <div className="mb-6 animate-fade-in-up animation-delay-200">
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              Document preview
+            </h2>
+            <DocumentRenderer />
+          </Card>
+        </div>
+      )}
 
       {/* Warning Popup */}
       <WarningPopup

@@ -65,7 +65,7 @@ export default function HomePage() {
       if (result.VALIDITY) {
         localStorage.setItem("verifiedDocument", fileContent);
 
-        console.log(result.DOCUMENT_INTEGRITY);
+        
 
         localStorage.setItem(
           "verificationResult",
@@ -108,6 +108,7 @@ export default function HomePage() {
 
     <DocumentUpload
       onFileUpload={handleFileUpload}
+      isLoading={isLoading}
     />
 
     {showCookieNotice && <CookieNotice onClose={() => setShowCookieNotice(false)} />}

@@ -21,6 +21,7 @@ export default function FormPage() {
   const [formConfig, setFormConfig] = useState(null)
   const [warningPopup, setWarningPopup] = useState({ isOpen: false, title: "", message: "", type: "warning" })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [canSubmit, setCanSubmit] = useState(false)
 
   const showWarning = (title, message, type = "warning") => {
     setWarningPopup({ isOpen: true, title, message, type })
@@ -77,6 +78,53 @@ export default function FormPage() {
     }
   }, [router])
 
+  const numberToWords = (num) => {
+    if (num === 0) return "Zero"
+    
+    const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"]
+    const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
+    const teens = ["Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"]
+    
+    const convertLessThanThousand = (n) => {
+      if (n === 0) return ""
+      
+      if (n < 10) return ones[n]
+      if (n < 20) return teens[n - 10]
+      if (n < 100) {
+        const ten = Math.floor(n / 10)
+        const one = n % 10
+        return tens[ten] + (one ? " " + ones[one] : "")
+      }
+      
+      const hundred = Math.floor(n / 100)
+      const remainder = n % 100
+      return ones[hundred] + " Hundred" + (remainder ? " " + convertLessThanThousand(remainder) : "")
+    }
+    
+    if (num < 1000) return convertLessThanThousand(num)
+    if (num < 1000000) {
+      const thousands = Math.floor(num / 1000)
+      const remainder = num % 1000
+      return convertLessThanThousand(thousands) + " Thousand" + (remainder ? " " + convertLessThanThousand(remainder) : "")
+    }
+    if (num < 1000000000) {
+      const millions = Math.floor(num / 1000000)
+      const remainder = num % 1000000
+      let result = convertLessThanThousand(millions) + " Million"
+      if (remainder >= 1000) {
+        const thousands = Math.floor(remainder / 1000)
+        result += " " + convertLessThanThousand(thousands) + " Thousand"
+        remainder = remainder % 1000
+      }
+      if (remainder > 0) {
+        result += " " + convertLessThanThousand(remainder)
+      }
+      return result
+    }
+    
+    return num.toString() // Fallback for very large numbers
+  }
+
   const updateFormData = (field, value) => {
     const newFormData = { ...formData, [field]: value }
     
@@ -117,6 +165,16 @@ export default function FormPage() {
         const interestRate = field === "interestRate" ? Number(value) : Number(newFormData.interestRate || 0)
         const interestAmount = (principal * interestRate) / 100
         newFormData.totalAmountPayable = principal + interestAmount
+      }
+      
+      // Auto-convert principal amount to words
+      if (field === "principalAmount") {
+        const principal = Number(value) || 0
+        if (principal > 0) {
+          newFormData.amountInWords = numberToWords(principal)
+        } else {
+          newFormData.amountInWords = ""
+        }
       }
     }
     
@@ -180,9 +238,15 @@ export default function FormPage() {
       if (currentStep < formConfig.steps.length - 1) {
         const newStep = currentStep + 1
         setCurrentStep(newStep)
+        setCanSubmit(false) // Reset submit permission when navigating
         // Save progress
         localStorage.setItem("currentStep", newStep.toString())
         localStorage.setItem("completedSteps", JSON.stringify([...newCompletedSteps]))
+        
+        // Allow submission after a short delay to prevent auto-submit
+        setTimeout(() => {
+          setCanSubmit(true)
+        }, 300)
       }
     } else {
       const incompleteFields = getIncompleteFields(currentStep)
@@ -267,7 +331,7 @@ export default function FormPage() {
         $template: {
           name: generateFieldWithUUID("main"),
           type: generateFieldWithUUID("EMBEDDED_RENDERER"),
-          url: generateFieldWithUUID("https://tutorial-renderer.openattestation.com"),
+          url: generateFieldWithUUID("http://decentralizedrenderer.netlify.app"),
         },
         recipient: {
           name: generateFieldWithUUID("ChainDox"),
@@ -335,6 +399,16 @@ export default function FormPage() {
   const handleSubmit = async (event) => {
     event.preventDefault()
 
+    // Ensure we're on the last step before allowing submission
+    if (!isLastStep) {
+      return
+    }
+
+    // Prevent auto-submission when just navigating to last step
+    if (!canSubmit) {
+      return
+    }
+
     // Validate final step before submission
     if (!validateStep(currentStep)) {
       const incompleteFields = getIncompleteFields(currentStep)
@@ -369,7 +443,7 @@ export default function FormPage() {
         remarks: formData.remarks || `Created ${selectedDocumentType.name} - ${documentNumber}`,
       }
 
-      console.log('Submitting document:', { documentId, payload })
+      
 
       // Call the API
       const result = await createDocument(documentId, payload)
@@ -388,7 +462,7 @@ export default function FormPage() {
           status: "completed",
         }
 
-        console.log('Document created successfully:', documentData)
+        
 
         // Store final document data for success page
         localStorage.setItem("completedDocument", JSON.stringify(documentData))
@@ -430,7 +504,7 @@ export default function FormPage() {
       console.error("Error creating document:", error)
       showWarning(
         "Document Creation Failed",
-        `An unexpected error occurred: ${error.message}\n\nPlease ensure the backend server is running at http://localhost:5000`,
+        `An unexpected error occurred: ${error.message}\n\nPlease ensure the backend server is running at https://decentralizedrenderer.netlify.app/`,
         "error",
       )
       setIsSubmitting(false)
@@ -525,7 +599,16 @@ export default function FormPage() {
           </div>
 
           {/* Form Fields */}
-          <form onSubmit={handleSubmit} className="p-6 sm:p-8">
+          <form 
+            onSubmit={handleSubmit} 
+            onKeyDown={(e) => {
+              // Prevent Enter key from submitting the form
+              if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault()
+              }
+            }}
+            className="p-6 sm:p-8"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {gridFields.map(({ field, span }, index) => (
                 <div 
